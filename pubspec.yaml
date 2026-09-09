@@ -1,0 +1,67 @@
+name: control_cierre
+description: Sistema de control de cierre de cajas con generación de PDF
+publish_to: 'none'
+version: 1.0.7+8
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # UI
+  cupertino_icons: ^1.0.6
+
+  # Base de datos local
+  sqflite: ^2.3.0
+  sqflite_common_ffi: ^2.3.0
+  path_provider: ^2.1.1
+  path: ^1.8.3
+
+  # Generación de PDF
+  pdf: ^3.11.1
+  printing: ^5.13.2
+
+  # Formateo de fechas y números
+  intl: ^0.20.2
+
+  # Manejo de estado
+  provider: ^6.1.1
+
+  # Compartir archivos
+  share_plus: ^7.2.1
+
+  # Selección de archivos y carpetas
+  file_picker: ^8.1.6
+
+  # Almacenamiento de preferencias
+  shared_preferences: ^2.3.3
+
+  # HTTP para verificar actualizaciones
+  http: ^1.1.0
+
+  # Lanzar URLs
+  url_launcher: ^6.2.1
+
+  # Manejo de archivos ZIP
+  archive: ^3.4.0
+
+  # Google Drive API
+  googleapis: ^13.2.0
+  googleapis_auth: ^1.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Puedes agregar assets aquí (logo, fuentes, etc.)
+  # assets:
+  #   - assets/images/
+  #   - assets/fonts/

@@ -1,0 +1,111 @@
+/// Modelo para representar un cierre de caja
+class CierreCaja {
+  final int? id;
+  final DateTime fecha;
+  final String cajero;
+  final double efectivoInicial;
+  final double ventasEfectivo;
+  final double ventasTarjeta;
+  final double ventasTransferencia;
+  final double gastos;
+  final double retiros;
+  final double efectivoFinal;
+  final double diferencia;
+  final String? observaciones;
+  final DateTime fechaCreacion;
+
+  CierreCaja({
+    this.id,
+    required this.fecha,
+    required this.cajero,
+    required this.efectivoInicial,
+    required this.ventasEfectivo,
+    required this.ventasTarjeta,
+    required this.ventasTransferencia,
+    required this.gastos,
+    required this.retiros,
+    required this.efectivoFinal,
+    required this.diferencia,
+    this.observaciones,
+    DateTime? fechaCreacion,
+  }) : fechaCreacion = fechaCreacion ?? DateTime.now();
+
+  // Cálculos automáticos
+  double get totalVentas => ventasEfectivo + ventasTarjeta + ventasTransferencia;
+
+  double get efectivoEsperado =>
+      efectivoInicial + ventasEfectivo - gastos - retiros;
+
+  bool get tieneDiferencia => diferencia.abs() > 0.01;
+
+  // Conversión a Map para SQLite
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'fecha': fecha.toIso8601String(),
+      'cajero': cajero,
+      'efectivo_inicial': efectivoInicial,
+      'ventas_efectivo': ventasEfectivo,
+      'ventas_tarjeta': ventasTarjeta,
+      'ventas_transferencia': ventasTransferencia,
+      'gastos': gastos,
+      'retiros': retiros,
+      'efectivo_final': efectivoFinal,
+      'diferencia': diferencia,
+      'observaciones': observaciones,
+      'fecha_creacion': fechaCreacion.toIso8601String(),
+    };
+  }
+
+  // Conversión desde Map
+  factory CierreCaja.fromMap(Map<String, dynamic> map) {
+    return CierreCaja(
+      id: map['id'] as int?,
+      fecha: DateTime.parse(map['fecha'] as String),
+      cajero: map['cajero'] as String,
+      efectivoInicial: (map['efectivo_inicial'] as num).toDouble(),
+      ventasEfectivo: (map['ventas_efectivo'] as num).toDouble(),
+      ventasTarjeta: (map['ventas_tarjeta'] as num).toDouble(),
+      ventasTransferencia: (map['ventas_transferencia'] as num).toDouble(),
+      gastos: (map['gastos'] as num).toDouble(),
+      retiros: (map['retiros'] as num).toDouble(),
+      efectivoFinal: (map['efectivo_final'] as num).toDouble(),
+      diferencia: (map['diferencia'] as num).toDouble(),
+      observaciones: map['observaciones'] as String?,
+      fechaCreacion: DateTime.parse(map['fecha_creacion'] as String),
+    );
+  }
+
+  // Crear copia con modificaciones
+  CierreCaja copyWith({
+    int? id,
+    DateTime? fecha,
+    String? cajero,
+    double? efectivoInicial,
+    double? ventasEfectivo,
+    double? ventasTarjeta,
+    double? ventasTransferencia,
+    double? gastos,
+    double? retiros,
+    double? efectivoFinal,
+    double? diferencia,
+    String? observaciones,
+    DateTime? fechaCreacion,
+  }) {
+    return CierreCaja(
+      id: id ?? this.id,
+      fecha: fecha ?? this.fecha,
+      cajero: cajero ?? this.cajero,
+      efectivoInicial: efectivoInicial ?? this.efectivoInicial,
+      ventasEfectivo: ventasEfectivo ?? this.ventasEfectivo,
+      ventasTarjeta: ventasTarjeta ?? this.ventasTarjeta,
+      ventasTransferencia: ventasTransferencia ?? this.ventasTransferencia,
+      gastos: gastos ?? this.gastos,
+      retiros: retiros ?? this.retiros,
+      efectivoFinal: efectivoFinal ?? this.efectivoFinal,
+      diferencia: diferencia ?? this.diferencia,
+      observaciones: observaciones ?? this.observaciones,
+      fechaCreacion: fechaCreacion ?? this.fechaCreacion,
+    );
+  }
+}
