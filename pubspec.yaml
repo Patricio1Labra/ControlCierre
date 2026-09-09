@@ -56,7 +56,6 @@ dependencies:
 dependency_overrides:
   archive: ^4.2.0
   material_color_utilities: ^0.13.1
-  qr: ^4.0.0
   test_api: ^0.7.14
 
 dev_dependencies:
