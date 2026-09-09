@@ -1863,27 +1863,20 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
     final cards = <Widget>[];
 
-    // Facturas de Contado puro (solo tiene montoContado, no es mixta)
-    final facturasContado =
-        _facturas.where((f) => f.esContado && !f.esMixto).toList();
+    // Facturas con componente contado (incluye mixtas, muestra solo el contado)
+    final facturasContado = _facturas.where((f) => f.esContado).toList();
 
     if (facturasContado.isNotEmpty) {
-      cards.add(_buildLista('Facturas Contado', facturasContado));
+      cards.add(
+          _buildLista('Facturas Contado', facturasContado, esContado: true));
     }
 
-    // Facturas de Crédito puro (solo tiene montoCredito, no es mixta)
-    final facturasCredito =
-        _facturas.where((f) => !f.esContado && f.esCredito).toList();
+    // Facturas con componente crédito (incluye mixtas, muestra solo el crédito)
+    final facturasCredito = _facturas.where((f) => f.esCredito).toList();
 
     if (facturasCredito.isNotEmpty) {
-      cards.add(_buildLista('Facturas Crédito', facturasCredito));
-    }
-
-    // Facturas Mixtas (tiene ambos componentes)
-    final facturasMixtas = _facturas.where((f) => f.esMixto).toList();
-
-    if (facturasMixtas.isNotEmpty) {
-      cards.add(_buildLista('Facturas Mixtas', facturasMixtas));
+      cards.add(
+          _buildLista('Facturas Crédito', facturasCredito, esContado: false));
     }
 
     if (_boletasCredito.isNotEmpty) {
@@ -1984,8 +1977,12 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
     );
   }
 
-  Widget _buildLista(String titulo, List<Factura> items) {
-    final total = items.fold<double>(0, (sum, item) => sum + item.monto);
+  Widget _buildLista(String titulo, List<Factura> items,
+      {bool esContado = true}) {
+    final total = items.fold<double>(
+        0,
+        (sum, item) =>
+            sum + (esContado ? item.montoContado : item.montoCredito));
 
     return SizedBox(
       width: 280,
@@ -2019,7 +2016,10 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(_formatCurrency(item.monto),
+                          Text(
+                              _formatCurrency(esContado
+                                  ? item.montoContado
+                                  : item.montoCredito),
                               style: const TextStyle(fontSize: 12)),
                           const SizedBox(width: 4),
                           IconButton(
@@ -3315,27 +3315,6 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                                 size: 20, color: Colors.blue),
                             SizedBox(width: 8),
                             Text('Facturas a Crédito'),
-                          ],
-                        ),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-
-                      CheckboxListTile(
-                        value: configuracionImpresion.imprimirFacturasMixtas,
-                        onChanged: (value) {
-                          setStateDialog(() {
-                            configuracionImpresion =
-                                configuracionImpresion.copyWith(
-                              imprimirFacturasMixtas: value ?? true,
-                            );
-                          });
-                        },
-                        title: const Row(
-                          children: [
-                            Icon(Icons.receipt_long,
-                                size: 20, color: Colors.orange),
-                            SizedBox(width: 8),
-                            Text('Facturas Mixtas'),
                           ],
                         ),
                         contentPadding: EdgeInsets.zero,

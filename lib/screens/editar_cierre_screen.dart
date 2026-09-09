@@ -204,9 +204,9 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
         ));
 
         final nuevo = _formatCurrency(nuevoContado + nuevoCredito);
-        final tipo = factura.esMixto
-            ? 'Factura Mixta'
-            : (factura.esCredito ? 'Factura Crédito' : 'Factura Contado');
+        final tipo = (nuevoContado > 0 && nuevoCredito > 0)
+            ? 'Factura Contado y Crédito'
+            : (nuevoCredito > 0 ? 'Factura Crédito' : 'Factura Contado');
         _registrarCorreccion(
           'Corrección $tipo #${factura.numero}: antes $anterior, ahora $nuevo',
           tipo,
@@ -553,7 +553,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       await _db.insertFactura(nuevaFactura);
 
       final tipo = nc > 0 && cr > 0
-          ? 'Factura Mixta'
+          ? 'Factura Contado y Crédito'
           : (cr > 0 ? 'Factura Crédito' : 'Factura Contado');
       _registrarCorreccion(
         'Agregada $tipo #${resultado['numero']} de ${_formatCurrency(total)}',
