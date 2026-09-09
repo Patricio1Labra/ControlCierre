@@ -67,3 +67,8 @@ web/version.json
 
 # PDFs generados
 *.pdf
+*.xlsm
+
+# Archivos residuales de IA / copias de respaldo
+ia/
+*.old
