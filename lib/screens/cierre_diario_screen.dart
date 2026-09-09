@@ -637,7 +637,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
         return Card(
           child: ExpansionTile(
-            key: ValueKey('factura_${_cierreActual?.numeroSesion}_${numeroController.text}'),
+            key: ValueKey(
+                'factura_${_cierreActual?.numeroSesion}_${numeroController.text}'),
             initiallyExpanded: _panelExpandido == 0,
             onExpansionChanged: (expanded) {
               _handlePanelExpansion(0, expanded);
@@ -696,8 +697,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                       style: const TextStyle(fontSize: 13),
                       onSubmitted: (_) async {
                         if (numeroController.text.isNotEmpty &&
-                            montoContadoController.text.isNotEmpty ||
-                            montoCreditoController.text.isNotEmpty) {
+                            (montoContadoController.text.isNotEmpty ||
+                                montoCreditoController.text.isNotEmpty)) {
                           // Verificar si el número ya existe
 
                           final numeroExiste = _facturas
@@ -715,8 +716,10 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                             return;
                           }
 
-                          final montoContado = double.tryParse(montoContadoController.text) ?? 0;
-                          final montoCredito = double.tryParse(montoCreditoController.text) ?? 0;
+                          final montoContado =
+                              double.tryParse(montoContadoController.text) ?? 0;
+                          final montoCredito =
+                              double.tryParse(montoCreditoController.text) ?? 0;
 
                           final factura = Factura(
                             cierreId: _cierreActual!.id!,
@@ -759,7 +762,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                       child: ElevatedButton(
                         onPressed: () async {
                           if (numeroController.text.isNotEmpty &&
-                              montoContadoController.text.isNotEmpty ||
+                                  montoContadoController.text.isNotEmpty ||
                               montoCreditoController.text.isNotEmpty) {
                             // Verificar si el número ya existe
 
@@ -779,8 +782,12 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                               return;
                             }
 
-                            final montoContado = double.tryParse(montoContadoController.text) ?? 0;
-                            final montoCredito = double.tryParse(montoCreditoController.text) ?? 0;
+                            final montoContado =
+                                double.tryParse(montoContadoController.text) ??
+                                    0;
+                            final montoCredito =
+                                double.tryParse(montoCreditoController.text) ??
+                                    0;
 
                             final factura = Factura(
                               cierreId: _cierreActual!.id!,
@@ -1857,14 +1864,16 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
     final cards = <Widget>[];
 
     // Facturas de Contado puro (solo tiene montoContado, no es mixta)
-    final facturasContado = _facturas.where((f) => f.esContado && !f.esMixto).toList();
+    final facturasContado =
+        _facturas.where((f) => f.esContado && !f.esMixto).toList();
 
     if (facturasContado.isNotEmpty) {
       cards.add(_buildLista('Facturas Contado', facturasContado));
     }
 
     // Facturas de Crédito puro (solo tiene montoCredito, no es mixta)
-    final facturasCredito = _facturas.where((f) => !f.esContado && f.esCredito).toList();
+    final facturasCredito =
+        _facturas.where((f) => !f.esContado && f.esCredito).toList();
 
     if (facturasCredito.isNotEmpty) {
       cards.add(_buildLista('Facturas Crédito', facturasCredito));
@@ -2547,10 +2556,10 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
   Future<void> _editarFactura(Factura factura) async {
     final numeroController = TextEditingController(text: factura.numero);
 
-    final montoContadoController = TextEditingController(
-        text: factura.montoContado.toStringAsFixed(2));
-    final montoCreditoController = TextEditingController(
-        text: factura.montoCredito.toStringAsFixed(2));
+    final montoContadoController =
+        TextEditingController(text: factura.montoContado.toStringAsFixed(2));
+    final montoCreditoController =
+        TextEditingController(text: factura.montoCredito.toStringAsFixed(2));
 
     await showDialog(
       context: context,
@@ -2602,8 +2611,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
               ElevatedButton(
                 onPressed: () async {
                   if (numeroController.text.isNotEmpty &&
-                      montoContadoController.text.isNotEmpty ||
-                      montoCreditoController.text.isNotEmpty) {
+                      (montoContadoController.text.isNotEmpty ||
+                          montoCreditoController.text.isNotEmpty)) {
                     // Verificar duplicados solo si cambió el número
 
                     if (numeroController.text != factura.numero) {
@@ -2624,8 +2633,10 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                       }
                     }
 
-                    final montoContado = double.tryParse(montoContadoController.text) ?? 0;
-                    final montoCredito = double.tryParse(montoCreditoController.text) ?? 0;
+                    final montoContado =
+                        double.tryParse(montoContadoController.text) ?? 0;
+                    final montoCredito =
+                        double.tryParse(montoCreditoController.text) ?? 0;
 
                     final facturaActualizada = Factura(
                       id: factura.id,
@@ -3422,7 +3433,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                             icon: const Icon(Icons.folder_open),
                             onPressed: () async {
                               String? selectedDirectory =
-                                  await FilePicker.platform.getDirectoryPath();
+                                  await FilePicker.getDirectoryPath();
 
                               if (selectedDirectory != null) {
                                 setStateDialog(() {
@@ -3458,7 +3469,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                             icon: const Icon(Icons.folder_open),
                             onPressed: () async {
                               String? selectedDirectory =
-                                  await FilePicker.platform.getDirectoryPath();
+                                  await FilePicker.getDirectoryPath();
 
                               if (selectedDirectory != null) {
                                 setStateDialog(() {

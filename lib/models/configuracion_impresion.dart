@@ -3,6 +3,7 @@ class ConfiguracionImpresion {
   final String? impresoraNombre;
   final bool imprimirFacturasContado;
   final bool imprimirFacturasCredito;
+  final bool imprimirFacturasMixtas;
   final bool imprimirResumen;
   final bool imprimirTicketEntrega;
   final bool imprimirDonJose;
@@ -12,6 +13,7 @@ class ConfiguracionImpresion {
     this.impresoraNombre,
     this.imprimirFacturasContado = true,
     this.imprimirFacturasCredito = true,
+    this.imprimirFacturasMixtas = true,
     this.imprimirResumen = true,
     this.imprimirTicketEntrega = true,
     this.imprimirDonJose = true,
@@ -23,6 +25,7 @@ class ConfiguracionImpresion {
       'impresora_nombre': impresoraNombre,
       'imprimir_facturas_contado': imprimirFacturasContado ? 1 : 0,
       'imprimir_facturas_credito': imprimirFacturasCredito ? 1 : 0,
+      'imprimir_facturas_mixtas': imprimirFacturasMixtas ? 1 : 0,
       'imprimir_resumen': imprimirResumen ? 1 : 0,
       'imprimir_ticket_entrega': imprimirTicketEntrega ? 1 : 0,
       'imprimir_don_jose': imprimirDonJose ? 1 : 0,
@@ -35,6 +38,8 @@ class ConfiguracionImpresion {
       impresoraNombre: map['impresora_nombre'] as String?,
       imprimirFacturasContado: (map['imprimir_facturas_contado'] as int) == 1,
       imprimirFacturasCredito: (map['imprimir_facturas_credito'] as int) == 1,
+      imprimirFacturasMixtas:
+          ((map['imprimir_facturas_mixtas'] as int?) ?? 1) == 1,
       imprimirResumen: (map['imprimir_resumen'] as int) == 1,
       imprimirTicketEntrega: (map['imprimir_ticket_entrega'] as int) == 1,
       imprimirDonJose: (map['imprimir_don_jose'] as int) == 1,
@@ -46,6 +51,7 @@ class ConfiguracionImpresion {
     String? impresoraNombre,
     bool? imprimirFacturasContado,
     bool? imprimirFacturasCredito,
+    bool? imprimirFacturasMixtas,
     bool? imprimirResumen,
     bool? imprimirTicketEntrega,
     bool? imprimirDonJose,
@@ -53,10 +59,15 @@ class ConfiguracionImpresion {
     return ConfiguracionImpresion(
       id: id ?? this.id,
       impresoraNombre: impresoraNombre ?? this.impresoraNombre,
-      imprimirFacturasContado: imprimirFacturasContado ?? this.imprimirFacturasContado,
-      imprimirFacturasCredito: imprimirFacturasCredito ?? this.imprimirFacturasCredito,
+      imprimirFacturasContado:
+          imprimirFacturasContado ?? this.imprimirFacturasContado,
+      imprimirFacturasCredito:
+          imprimirFacturasCredito ?? this.imprimirFacturasCredito,
+      imprimirFacturasMixtas:
+          imprimirFacturasMixtas ?? this.imprimirFacturasMixtas,
       imprimirResumen: imprimirResumen ?? this.imprimirResumen,
-      imprimirTicketEntrega: imprimirTicketEntrega ?? this.imprimirTicketEntrega,
+      imprimirTicketEntrega:
+          imprimirTicketEntrega ?? this.imprimirTicketEntrega,
       imprimirDonJose: imprimirDonJose ?? this.imprimirDonJose,
     );
   }

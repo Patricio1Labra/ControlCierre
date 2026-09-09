@@ -29,7 +29,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -38,9 +38,12 @@ class DatabaseService {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       // Agregar nuevas columnas para sesiones
-      await db.execute('ALTER TABLE cierres_caja ADD COLUMN numero_sesion INTEGER NOT NULL DEFAULT 1');
-      await db.execute('ALTER TABLE cierres_caja ADD COLUMN nombre_cajero TEXT');
-      await db.execute('ALTER TABLE cierres_caja ADD COLUMN cerrada INTEGER NOT NULL DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE cierres_caja ADD COLUMN numero_sesion INTEGER NOT NULL DEFAULT 1');
+      await db
+          .execute('ALTER TABLE cierres_caja ADD COLUMN nombre_cajero TEXT');
+      await db.execute(
+          'ALTER TABLE cierres_caja ADD COLUMN cerrada INTEGER NOT NULL DEFAULT 0');
     }
     if (oldVersion < 3) {
       // Agregar tabla de correcciones
@@ -98,7 +101,8 @@ class DatabaseService {
     }
     if (oldVersion < 6) {
       // Agregar columna tarjetas_pago para modo ferretería
-      await db.execute('ALTER TABLE cierres_caja ADD COLUMN tarjetas_pago REAL NOT NULL DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE cierres_caja ADD COLUMN tarjetas_pago REAL NOT NULL DEFAULT 0');
     }
     if (oldVersion < 7) {
       // Agregar tabla de configuración de Google Drive
@@ -142,11 +146,19 @@ class DatabaseService {
     }
     if (oldVersion < 9) {
       // Agregar columnas monto_contado y monto_credito a facturas para soporte de doble método
-      await db.execute('ALTER TABLE facturas ADD COLUMN monto_contado REAL NOT NULL DEFAULT 0');
-      await db.execute('ALTER TABLE facturas ADD COLUMN monto_credito REAL NOT NULL DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE facturas ADD COLUMN monto_contado REAL NOT NULL DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE facturas ADD COLUMN monto_credito REAL NOT NULL DEFAULT 0');
 
       // Migrar datos existentes: convertir es_credito y monto a los nuevos campos
-      await db.execute('UPDATE facturas SET monto_contado = CASE WHEN es_credito = 0 THEN monto ELSE 0 END, monto_credito = CASE WHEN es_credito = 1 THEN monto ELSE 0 END');
+      await db.execute(
+          'UPDATE facturas SET monto_contado = CASE WHEN es_credito = 0 THEN monto ELSE 0 END, monto_credito = CASE WHEN es_credito = 1 THEN monto ELSE 0 END');
+    }
+    if (oldVersion < 10) {
+      // Agregar opción de imprimir facturas mixtas
+      await db.execute(
+          'ALTER TABLE configuracion_impresion ADD COLUMN imprimir_facturas_mixtas INTEGER NOT NULL DEFAULT 1');
     }
   }
 
@@ -257,7 +269,8 @@ class DatabaseService {
         imprimir_facturas_credito INTEGER NOT NULL DEFAULT 1,
         imprimir_resumen INTEGER NOT NULL DEFAULT 1,
         imprimir_ticket_entrega INTEGER NOT NULL DEFAULT 1,
-        imprimir_don_jose INTEGER NOT NULL DEFAULT 1
+        imprimir_don_jose INTEGER NOT NULL DEFAULT 1,
+        imprimir_facturas_mixtas INTEGER NOT NULL DEFAULT 1
       )
     ''');
 
@@ -268,8 +281,9 @@ class DatabaseService {
         imprimir_facturas_credito,
         imprimir_resumen,
         imprimir_ticket_entrega,
-        imprimir_don_jose
-      ) VALUES (1, 1, 1, 1, 1)
+        imprimir_don_jose,
+        imprimir_facturas_mixtas
+      ) VALUES (1, 1, 1, 1, 1, 1)
     ''');
 
     // Tabla de configuración de Google Drive (OAuth2)
@@ -297,8 +311,10 @@ class DatabaseService {
   // CRUD para CierreCaja
   Future<int> insertCierre(CierreCaja cierre) async {
     try {
-      await logger.logDatabaseOperation('INSERT', 'cierres_caja',
-        data: {'numeroSesion': cierre.numeroSesion, 'cajero': cierre.nombreCajero});
+      await logger.logDatabaseOperation('INSERT', 'cierres_caja', data: {
+        'numeroSesion': cierre.numeroSesion,
+        'cajero': cierre.nombreCajero
+      });
       final db = await database;
       final id = await db.insert('cierres_caja', cierre.toMap());
       await logger.info('Database', 'Cierre creado con ID: $id');
@@ -370,7 +386,7 @@ class DatabaseService {
   Future<int> updateCierre(CierreCaja cierre) async {
     try {
       await logger.logDatabaseOperation('UPDATE', 'cierres_caja',
-        data: {'id': cierre.id, 'cerrada': cierre.cerrada});
+          data: {'id': cierre.id, 'cerrada': cierre.cerrada});
       final db = await database;
       final result = await db.update(
         'cierres_caja',
@@ -388,7 +404,8 @@ class DatabaseService {
 
   Future<int> deleteCierre(int id) async {
     try {
-      await logger.logDatabaseOperation('DELETE', 'cierres_caja', data: {'id': id});
+      await logger
+          .logDatabaseOperation('DELETE', 'cierres_caja', data: {'id': id});
       final db = await database;
       final result = await db.delete(
         'cierres_caja',
@@ -406,11 +423,15 @@ class DatabaseService {
   // CRUD para Facturas
   Future<int> insertFactura(Factura factura) async {
     try {
-      await logger.logDatabaseOperation('INSERT', 'facturas',
-        data: {'numero': factura.numero, 'montoContado': factura.montoContado, 'montoCredito': factura.montoCredito});
+      await logger.logDatabaseOperation('INSERT', 'facturas', data: {
+        'numero': factura.numero,
+        'montoContado': factura.montoContado,
+        'montoCredito': factura.montoCredito
+      });
       final db = await database;
       final id = await db.insert('facturas', factura.toMap());
-      await logger.info('Database', 'Factura ${factura.numero} creada con ID: $id');
+      await logger.info(
+          'Database', 'Factura ${factura.numero} creada con ID: $id');
       return id;
     } catch (e, stackTrace) {
       await logger.logDatabaseError('INSERT', 'facturas', e, stackTrace);
@@ -432,7 +453,7 @@ class DatabaseService {
   Future<int> updateFactura(Factura factura) async {
     try {
       await logger.logDatabaseOperation('UPDATE', 'facturas',
-        data: {'id': factura.id, 'numero': factura.numero});
+          data: {'id': factura.id, 'numero': factura.numero});
       final db = await database;
       return await db.update(
         'facturas',
@@ -501,7 +522,7 @@ class DatabaseService {
   Future<int> insertPago(Pago pago) async {
     try {
       await logger.logDatabaseOperation('INSERT', 'pagos',
-        data: {'rut': pago.rut, 'monto': pago.monto});
+          data: {'rut': pago.rut, 'monto': pago.monto});
       final db = await database;
       return await db.insert('pagos', pago.toMap());
     } catch (e, stackTrace) {
@@ -543,17 +564,22 @@ class DatabaseService {
   // CRUD para Movimientos Simples
   Future<int> insertMovimiento(MovimientoSimple movimiento) async {
     try {
-      await logger.logDatabaseOperation('INSERT', 'movimientos_simples',
-        data: {'tipo': movimiento.tipo, 'numero': movimiento.numero, 'monto': movimiento.monto});
+      await logger.logDatabaseOperation('INSERT', 'movimientos_simples', data: {
+        'tipo': movimiento.tipo,
+        'numero': movimiento.numero,
+        'monto': movimiento.monto
+      });
       final db = await database;
       return await db.insert('movimientos_simples', movimiento.toMap());
     } catch (e, stackTrace) {
-      await logger.logDatabaseError('INSERT', 'movimientos_simples', e, stackTrace);
+      await logger.logDatabaseError(
+          'INSERT', 'movimientos_simples', e, stackTrace);
       rethrow;
     }
   }
 
-  Future<List<MovimientoSimple>> getMovimientosByCierre(int cierreId, {String? tipo}) async {
+  Future<List<MovimientoSimple>> getMovimientosByCierre(int cierreId,
+      {String? tipo}) async {
     final db = await database;
     final maps = await db.query(
       'movimientos_simples',
@@ -664,28 +690,33 @@ class DatabaseService {
 
       return ConfiguracionImpresion.fromMap(maps.first);
     } catch (e, stackTrace) {
-      await logger.logDatabaseError('SELECT', 'configuracion_impresion', e, stackTrace);
+      await logger.logDatabaseError(
+          'SELECT', 'configuracion_impresion', e, stackTrace);
       rethrow;
     }
   }
 
-  Future<int> insertConfiguracionImpresion(ConfiguracionImpresion config) async {
+  Future<int> insertConfiguracionImpresion(
+      ConfiguracionImpresion config) async {
     try {
       await logger.logDatabaseOperation('INSERT', 'configuracion_impresion');
       final db = await database;
       final id = await db.insert('configuracion_impresion', config.toMap());
-      await logger.info('Database', 'Configuración de impresión creada con ID: $id');
+      await logger.info(
+          'Database', 'Configuración de impresión creada con ID: $id');
       return id;
     } catch (e, stackTrace) {
-      await logger.logDatabaseError('INSERT', 'configuracion_impresion', e, stackTrace);
+      await logger.logDatabaseError(
+          'INSERT', 'configuracion_impresion', e, stackTrace);
       rethrow;
     }
   }
 
-  Future<int> updateConfiguracionImpresion(ConfiguracionImpresion config) async {
+  Future<int> updateConfiguracionImpresion(
+      ConfiguracionImpresion config) async {
     try {
       await logger.logDatabaseOperation('UPDATE', 'configuracion_impresion',
-        data: {'id': config.id});
+          data: {'id': config.id});
       final db = await database;
       final count = await db.update(
         'configuracion_impresion',
@@ -696,7 +727,8 @@ class DatabaseService {
       await logger.info('Database', 'Configuración de impresión actualizada');
       return count;
     } catch (e, stackTrace) {
-      await logger.logDatabaseError('UPDATE', 'configuracion_impresion', e, stackTrace);
+      await logger.logDatabaseError(
+          'UPDATE', 'configuracion_impresion', e, stackTrace);
       rethrow;
     }
   }
@@ -729,7 +761,8 @@ class DatabaseService {
 
       return GoogleDriveConfig.fromMap(result.first);
     } catch (e, stackTrace) {
-      await logger.error('DB', 'Error al obtener configuración de Google Drive', error: e, stackTrace: stackTrace);
+      await logger.error('DB', 'Error al obtener configuración de Google Drive',
+          error: e, stackTrace: stackTrace);
       return null;
     }
   }
@@ -754,7 +787,9 @@ class DatabaseService {
         );
       }
     } catch (e, stackTrace) {
-      await logger.error('DB', 'Error al actualizar configuración de Google Drive', error: e, stackTrace: stackTrace);
+      await logger.error(
+          'DB', 'Error al actualizar configuración de Google Drive',
+          error: e, stackTrace: stackTrace);
       return 0;
     }
   }

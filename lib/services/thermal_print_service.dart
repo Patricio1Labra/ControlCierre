@@ -37,33 +37,48 @@ class ThermalPrintService {
   ) async {
     final pdf = pw.Document();
 
-    // Calcular totales
-    final facturasContado = facturas.where((f) => !f.esCredito).toList();
-    final facturasCredito = facturas.where((f) => f.esCredito).toList();
+    // Calcular totales por componente sobre todas las facturas
 
-    final totalFacturasContado = facturasContado.fold<double>(0, (sum, f) => sum + f.monto);
-    final totalFacturasCredito = facturasCredito.fold<double>(0, (sum, f) => sum + f.monto);
-    final totalBoletasCredito = boletasCredito.fold<double>(0, (sum, b) => sum + b.monto);
+    final totalFacturasContado =
+        facturas.fold<double>(0, (sum, f) => sum + f.montoContado);
+    final totalFacturasCredito =
+        facturas.fold<double>(0, (sum, f) => sum + f.montoCredito);
+    final totalBoletasCredito =
+        boletasCredito.fold<double>(0, (sum, b) => sum + b.monto);
     final totalPagos = pagos.fold<double>(0, (sum, p) => sum + p.monto);
-    final totalTransferencias = transferencias.fold<double>(0, (sum, t) => sum + t.monto);
+    final totalTransferencias =
+        transferencias.fold<double>(0, (sum, t) => sum + t.monto);
     final totalCheques = cheques.fold<double>(0, (sum, c) => sum + c.monto);
     final totalDepositos = depositos.fold<double>(0, (sum, d) => sum + d.monto);
-    final totalNotasCredito = notasCredito.fold<double>(0, (sum, n) => sum + n.monto);
-    final totalTarjetasIndividuales = tarjetas.fold<double>(0, (sum, t) => sum + t.monto);
-    final totalOtrosEntrada = otrosEntrada.fold<double>(0, (sum, o) => sum + o.monto);
-    final totalOtrosSalida = otrosSalida.fold<double>(0, (sum, o) => sum + o.monto);
+    final totalNotasCredito =
+        notasCredito.fold<double>(0, (sum, n) => sum + n.monto);
+    final totalTarjetasIndividuales =
+        tarjetas.fold<double>(0, (sum, t) => sum + t.monto);
+    final totalOtrosEntrada =
+        otrosEntrada.fold<double>(0, (sum, o) => sum + o.monto);
+    final totalOtrosSalida =
+        otrosSalida.fold<double>(0, (sum, o) => sum + o.monto);
     // Si hay tarjetas individuales, usar su total; sino usar los valores manuales (POS + Pago)
-    final totalTarjetas = tarjetas.isNotEmpty ? totalTarjetasIndividuales : (cierre.tarjetas + cierre.tarjetasPago);
+    final totalTarjetas = tarjetas.isNotEmpty
+        ? totalTarjetasIndividuales
+        : (cierre.tarjetas + cierre.tarjetasPago);
 
     // Cálculos del resumen
     // INGRESOS: depositos, boletas credito, facturas credito, cheques, transferencias, notas de credito, tarjetas, efectivo, otros entrada
-    final ingresosTotales = totalDepositos + totalBoletasCredito + totalFacturasCredito +
-                           totalCheques + totalTransferencias + totalNotasCredito +
-                           totalTarjetas + cierre.efectivo + totalOtrosEntrada;
+    final ingresosTotales = totalDepositos +
+        totalBoletasCredito +
+        totalFacturasCredito +
+        totalCheques +
+        totalTransferencias +
+        totalNotasCredito +
+        totalTarjetas +
+        cierre.efectivo +
+        totalOtrosEntrada;
 
     // SALIDAS: pagos, total de facturas (todas: contado + credito), fondo caja (apertura), otros salida
     final totalFacturas = totalFacturasContado + totalFacturasCredito;
-    final salidasTotales = totalPagos + totalFacturas + cierre.aperturaCaja + totalOtrosSalida;
+    final salidasTotales =
+        totalPagos + totalFacturas + cierre.aperturaCaja + totalOtrosSalida;
 
     final total = ingresosTotales - salidasTotales;
 
@@ -118,42 +133,48 @@ class ThermalPrintService {
               style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
             ),
             _buildLineaThermal('Depósitos:', _formatCurrency(totalDepositos)),
-            _buildLineaThermal('Boletas a Crédito:', _formatCurrency(totalBoletasCredito)),
-            _buildLineaThermal('Facturas Crédito:', _formatCurrency(totalFacturasCredito)),
+            _buildLineaThermal(
+                'Boletas a Crédito:', _formatCurrency(totalBoletasCredito)),
+            _buildLineaThermal(
+                'Facturas Crédito:', _formatCurrency(totalFacturasCredito)),
             _buildLineaThermal('Cheques:', _formatCurrency(totalCheques)),
-            _buildLineaThermal('Transferencias:', _formatCurrency(totalTransferencias)),
-            _buildLineaThermal('Notas de Crédito:', _formatCurrency(totalNotasCredito)),
+            _buildLineaThermal(
+                'Transferencias:', _formatCurrency(totalTransferencias)),
+            _buildLineaThermal(
+                'Notas de Crédito:', _formatCurrency(totalNotasCredito)),
 
             // Otros con desglose
             if (otrosEntrada.isNotEmpty) ...[
               pw.SizedBox(height: 2),
               _buildLineaThermal('Otros:', _formatCurrency(totalOtrosEntrada)),
               ...otrosEntrada.map((o) => pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Expanded(
-                    flex: 3,
-                    child: pw.Padding(
-                      padding: const pw.EdgeInsets.only(left: 10),
-                      child: pw.Text(
-                        o.numero ?? "Sin motivo",
-                        style: pw.TextStyle(fontSize: 7, fontStyle: pw.FontStyle.italic),
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Expanded(
+                        flex: 3,
+                        child: pw.Padding(
+                          padding: const pw.EdgeInsets.only(left: 10),
+                          child: pw.Text(
+                            o.numero ?? "Sin motivo",
+                            style: pw.TextStyle(
+                                fontSize: 7, fontStyle: pw.FontStyle.italic),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  pw.Expanded(
-                    flex: 2,
-                    child: pw.Padding(
-                      padding: const pw.EdgeInsets.only(right: 20),
-                      child: pw.Text(
-                        _formatCurrency(o.monto),
-                        textAlign: pw.TextAlign.right,
-                        style: pw.TextStyle(fontSize: 7, fontStyle: pw.FontStyle.italic),
+                      pw.Expanded(
+                        flex: 2,
+                        child: pw.Padding(
+                          padding: const pw.EdgeInsets.only(right: 20),
+                          child: pw.Text(
+                            _formatCurrency(o.monto),
+                            textAlign: pw.TextAlign.right,
+                            style: pw.TextStyle(
+                                fontSize: 7, fontStyle: pw.FontStyle.italic),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              )),
+                    ],
+                  )),
             ],
 
             // Tarjetas individuales o valores manuales
@@ -161,22 +182,25 @@ class ThermalPrintService {
               pw.SizedBox(height: 2),
               pw.Text(
                 'Tarjetas Venta:',
-                style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
+                style:
+                    pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
               ),
               ...tarjetas.map((t) => _buildLineaThermal(
-                '  ${t.numero}',
-                _formatCurrency(t.monto),
-                fontSize: 7,
-              )),
+                    '  ${t.numero}',
+                    _formatCurrency(t.monto),
+                    fontSize: 7,
+                  )),
               _buildLineaThermal(
                 'Total Tarjetas:',
                 _formatCurrency(totalTarjetas),
                 fontSize: 8,
               ),
             ] else ...[
-              _buildLineaThermal('Tarjetas Venta:', _formatCurrency(cierre.tarjetas)),
+              _buildLineaThermal(
+                  'Tarjetas Venta:', _formatCurrency(cierre.tarjetas)),
               if (cierre.tarjetasPago > 0)
-                _buildLineaThermal('Tarjetas Pago:', _formatCurrency(cierre.tarjetasPago)),
+                _buildLineaThermal(
+                    'Tarjetas Pago:', _formatCurrency(cierre.tarjetasPago)),
             ],
 
             _buildLineaThermal('Efectivo:', _formatCurrency(cierre.efectivo)),
@@ -196,39 +220,43 @@ class ThermalPrintService {
               style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
             ),
             _buildLineaThermal('Pagos:', _formatCurrency(totalPagos)),
-            _buildLineaThermal('Total Facturas:', _formatCurrency(totalFacturas)),
-            _buildLineaThermal('Fondo Caja:', _formatCurrency(cierre.aperturaCaja)),
+            _buildLineaThermal(
+                'Total Facturas:', _formatCurrency(totalFacturas)),
+            _buildLineaThermal(
+                'Fondo Caja:', _formatCurrency(cierre.aperturaCaja)),
 
             // Otros con desglose
             if (otrosSalida.isNotEmpty) ...[
               pw.SizedBox(height: 2),
               _buildLineaThermal('Otros:', _formatCurrency(totalOtrosSalida)),
               ...otrosSalida.map((o) => pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Expanded(
-                    flex: 3,
-                    child: pw.Padding(
-                      padding: const pw.EdgeInsets.only(left: 10),
-                      child: pw.Text(
-                        o.numero ?? "Sin motivo",
-                        style: pw.TextStyle(fontSize: 7, fontStyle: pw.FontStyle.italic),
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Expanded(
+                        flex: 3,
+                        child: pw.Padding(
+                          padding: const pw.EdgeInsets.only(left: 10),
+                          child: pw.Text(
+                            o.numero ?? "Sin motivo",
+                            style: pw.TextStyle(
+                                fontSize: 7, fontStyle: pw.FontStyle.italic),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  pw.Expanded(
-                    flex: 2,
-                    child: pw.Padding(
-                      padding: const pw.EdgeInsets.only(right: 20),
-                      child: pw.Text(
-                        _formatCurrency(o.monto),
-                        textAlign: pw.TextAlign.right,
-                        style: pw.TextStyle(fontSize: 7, fontStyle: pw.FontStyle.italic),
+                      pw.Expanded(
+                        flex: 2,
+                        child: pw.Padding(
+                          padding: const pw.EdgeInsets.only(right: 20),
+                          child: pw.Text(
+                            _formatCurrency(o.monto),
+                            textAlign: pw.TextAlign.right,
+                            style: pw.TextStyle(
+                                fontSize: 7, fontStyle: pw.FontStyle.italic),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              )),
+                    ],
+                  )),
             ],
 
             pw.Divider(thickness: 0.5),
@@ -260,22 +288,23 @@ class ThermalPrintService {
               pw.Center(
                 child: pw.Text(
                   '⚠ CORRECCIONES',
-                  style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                  style:
+                      pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
                 ),
               ),
               pw.SizedBox(height: 4),
               pw.Divider(thickness: 0.5),
               ...correcciones.map((corr) => pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.SizedBox(height: 2),
-                  pw.Text(
-                    '• ${corr.descripcion}',
-                    style: const pw.TextStyle(fontSize: 7),
-                  ),
-                  pw.SizedBox(height: 2),
-                ],
-              )),
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.SizedBox(height: 2),
+                      pw.Text(
+                        '• ${corr.descripcion}',
+                        style: const pw.TextStyle(fontSize: 7),
+                      ),
+                      pw.SizedBox(height: 2),
+                    ],
+                  )),
             ],
 
             pw.SizedBox(height: 8),
@@ -300,13 +329,14 @@ class ThermalPrintService {
     String nombreCaja,
   ) async {
     final pdf = pw.Document();
-    final facturasContado = facturas.where((f) => !f.esCredito).toList();
+    final facturasContado = facturas.where((f) => f.esContado).toList();
 
     if (facturasContado.isEmpty) {
       return pdf; // Retorna PDF vacío si no hay facturas de contado
     }
 
-    final totalFacturasContado = facturasContado.fold<double>(0, (sum, f) => sum + f.monto);
+    final totalFacturasContado =
+        facturasContado.fold<double>(0, (sum, f) => sum + f.montoContado);
 
     const pdfPageFormat = PdfPageFormat(
       72 * PdfPageFormat.mm,
@@ -359,10 +389,10 @@ class ThermalPrintService {
             ),
             pw.SizedBox(height: 2),
             ...facturasContado.map((f) => _buildLineaThermal(
-              f.numero,
-              _formatCurrency(f.monto),
-              fontSize: 8,
-            )),
+                  f.numero,
+                  _formatCurrency(f.montoContado),
+                  fontSize: 8,
+                )),
 
             pw.SizedBox(height: 4),
             pw.Divider(thickness: 1),
@@ -404,7 +434,8 @@ class ThermalPrintService {
       return pdf; // Retorna PDF vacío si no hay facturas a crédito
     }
 
-    final totalFacturasCredito = facturasCredito.fold<double>(0, (sum, f) => sum + f.monto);
+    final totalFacturasCredito =
+        facturasCredito.fold<double>(0, (sum, f) => sum + f.montoCredito);
 
     const pdfPageFormat = PdfPageFormat(
       72 * PdfPageFormat.mm,
@@ -457,10 +488,10 @@ class ThermalPrintService {
             ),
             pw.SizedBox(height: 2),
             ...facturasCredito.map((f) => _buildLineaThermal(
-              f.numero,
-              _formatCurrency(f.monto),
-              fontSize: 8,
-            )),
+                  f.numero,
+                  _formatCurrency(f.montoCredito),
+                  fontSize: 8,
+                )),
 
             pw.SizedBox(height: 4),
             pw.Divider(thickness: 1),
@@ -506,33 +537,48 @@ class ThermalPrintService {
   ) async {
     final pdf = pw.Document();
 
-    // Calcular totales
-    final facturasContado = facturas.where((f) => !f.esCredito).toList();
-    final facturasCredito = facturas.where((f) => f.esCredito).toList();
+    // Calcular totales por componente sobre todas las facturas
 
-    final totalFacturasContado = facturasContado.fold<double>(0, (sum, f) => sum + f.monto);
-    final totalFacturasCredito = facturasCredito.fold<double>(0, (sum, f) => sum + f.monto);
-    final totalBoletasCredito = boletasCredito.fold<double>(0, (sum, b) => sum + b.monto);
+    final totalFacturasContado =
+        facturas.fold<double>(0, (sum, f) => sum + f.montoContado);
+    final totalFacturasCredito =
+        facturas.fold<double>(0, (sum, f) => sum + f.montoCredito);
+    final totalBoletasCredito =
+        boletasCredito.fold<double>(0, (sum, b) => sum + b.monto);
     final totalPagos = pagos.fold<double>(0, (sum, p) => sum + p.monto);
-    final totalTransferencias = transferencias.fold<double>(0, (sum, t) => sum + t.monto);
+    final totalTransferencias =
+        transferencias.fold<double>(0, (sum, t) => sum + t.monto);
     final totalCheques = cheques.fold<double>(0, (sum, c) => sum + c.monto);
     final totalDepositos = depositos.fold<double>(0, (sum, d) => sum + d.monto);
-    final totalNotasCredito = notasCredito.fold<double>(0, (sum, n) => sum + n.monto);
-    final totalTarjetasIndividuales = tarjetas.fold<double>(0, (sum, t) => sum + t.monto);
-    final totalOtrosEntrada = otrosEntrada.fold<double>(0, (sum, o) => sum + o.monto);
-    final totalOtrosSalida = otrosSalida.fold<double>(0, (sum, o) => sum + o.monto);
+    final totalNotasCredito =
+        notasCredito.fold<double>(0, (sum, n) => sum + n.monto);
+    final totalTarjetasIndividuales =
+        tarjetas.fold<double>(0, (sum, t) => sum + t.monto);
+    final totalOtrosEntrada =
+        otrosEntrada.fold<double>(0, (sum, o) => sum + o.monto);
+    final totalOtrosSalida =
+        otrosSalida.fold<double>(0, (sum, o) => sum + o.monto);
     // Si hay tarjetas individuales, usar su total; sino usar los valores manuales (POS + Pago)
-    final totalTarjetas = tarjetas.isNotEmpty ? totalTarjetasIndividuales : (cierre.tarjetas + cierre.tarjetasPago);
+    final totalTarjetas = tarjetas.isNotEmpty
+        ? totalTarjetasIndividuales
+        : (cierre.tarjetas + cierre.tarjetasPago);
 
     // Cálculos del resumen
     // INGRESOS: depositos, boletas credito, facturas credito, cheques, transferencias, notas de credito, tarjetas, efectivo, otros entrada
-    final ingresosTotales = totalDepositos + totalBoletasCredito + totalFacturasCredito +
-                           totalCheques + totalTransferencias + totalNotasCredito +
-                           totalTarjetas + cierre.efectivo + totalOtrosEntrada;
+    final ingresosTotales = totalDepositos +
+        totalBoletasCredito +
+        totalFacturasCredito +
+        totalCheques +
+        totalTransferencias +
+        totalNotasCredito +
+        totalTarjetas +
+        cierre.efectivo +
+        totalOtrosEntrada;
 
     // SALIDAS: pagos, total de facturas (todas: contado + credito), fondo caja (apertura), otros salida
     final totalFacturas = totalFacturasContado + totalFacturasCredito;
-    final salidasTotales = totalPagos + totalFacturas + cierre.aperturaCaja + totalOtrosSalida;
+    final salidasTotales =
+        totalPagos + totalFacturas + cierre.aperturaCaja + totalOtrosSalida;
 
     final total = ingresosTotales - salidasTotales;
 
@@ -631,8 +677,12 @@ class ThermalPrintService {
     final pdf = pw.Document();
 
     // Separar boletas y facturas
-    final boletas = donJose.where((d) => d.numero != null && d.numero!.startsWith('Boleta')).toList();
-    final facturas = donJose.where((d) => d.numero != null && d.numero!.startsWith('Factura')).toList();
+    final boletas = donJose
+        .where((d) => d.numero != null && d.numero!.startsWith('Boleta'))
+        .toList();
+    final facturas = donJose
+        .where((d) => d.numero != null && d.numero!.startsWith('Factura'))
+        .toList();
 
     final totalBoletas = boletas.fold<double>(0, (sum, b) => sum + b.monto);
     final totalFacturas = facturas.fold<double>(0, (sum, f) => sum + f.monto);
@@ -687,7 +737,8 @@ class ThermalPrintService {
             if (boletas.isNotEmpty) ...[
               pw.Text(
                 'BOLETAS',
-                style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                style:
+                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 2),
               ...boletas.map((item) {
@@ -698,12 +749,15 @@ class ThermalPrintService {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(numeroDoc, style: const pw.TextStyle(fontSize: 8)),
-                    pw.Text(_formatCurrency(item.monto), style: const pw.TextStyle(fontSize: 8)),
+                    pw.Text(_formatCurrency(item.monto),
+                        style: const pw.TextStyle(fontSize: 8)),
                   ],
                 );
               }),
               pw.SizedBox(height: 2),
-              _buildLineaThermal('Subtotal Boletas:', _formatCurrency(totalBoletas), bold: true),
+              _buildLineaThermal(
+                  'Subtotal Boletas:', _formatCurrency(totalBoletas),
+                  bold: true),
               pw.SizedBox(height: 4),
             ],
 
@@ -711,7 +765,8 @@ class ThermalPrintService {
             if (facturas.isNotEmpty) ...[
               pw.Text(
                 'FACTURAS',
-                style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                style:
+                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 2),
               ...facturas.map((item) {
@@ -722,12 +777,15 @@ class ThermalPrintService {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(numeroDoc, style: const pw.TextStyle(fontSize: 8)),
-                    pw.Text(_formatCurrency(item.monto), style: const pw.TextStyle(fontSize: 8)),
+                    pw.Text(_formatCurrency(item.monto),
+                        style: const pw.TextStyle(fontSize: 8)),
                   ],
                 );
               }),
               pw.SizedBox(height: 2),
-              _buildLineaThermal('Subtotal Facturas:', _formatCurrency(totalFacturas), bold: true),
+              _buildLineaThermal(
+                  'Subtotal Facturas:', _formatCurrency(totalFacturas),
+                  bold: true),
               pw.SizedBox(height: 4),
             ],
 
@@ -735,7 +793,8 @@ class ThermalPrintService {
             pw.SizedBox(height: 4),
 
             // TOTAL GENERAL
-            _buildLineaThermal('TOTAL DON JOSÉ:', _formatCurrency(totalGeneral), bold: true, fontSize: 10),
+            _buildLineaThermal('TOTAL DON JOSÉ:', _formatCurrency(totalGeneral),
+                bold: true, fontSize: 10),
 
             pw.SizedBox(height: 8),
             pw.Center(
@@ -813,8 +872,10 @@ class ThermalPrintService {
       // Si no hay configuración, usar valores por defecto (todo activado)
       final config = configuracion ?? ConfiguracionImpresion();
 
-      await logger.info('ThermalPrint', 'Generando documentos para sesión ${cierre.numeroSesion}');
-      await logger.debug('ThermalPrint', 'Configuración: Contado=${config.imprimirFacturasContado}, Crédito=${config.imprimirFacturasCredito}, Resumen=${config.imprimirResumen}, Entrega=${config.imprimirTicketEntrega}, DonJosé=${config.imprimirDonJose}');
+      await logger.info('ThermalPrint',
+          'Generando documentos para sesión ${cierre.numeroSesion}');
+      await logger.debug('ThermalPrint',
+          'Configuración: Contado=${config.imprimirFacturasContado}, Crédito=${config.imprimirFacturasCredito}, Resumen=${config.imprimirResumen}, Entrega=${config.imprimirTicketEntrega}, DonJosé=${config.imprimirDonJose}');
 
       final documentos = <pw.Document>[];
 
@@ -828,7 +889,8 @@ class ThermalPrintService {
         );
         documentos.add(pdfContado);
       } else {
-        await logger.debug('ThermalPrint', 'Facturas contado: deshabilitado en configuración');
+        await logger.debug(
+            'ThermalPrint', 'Facturas contado: deshabilitado en configuración');
       }
 
       // 2. Facturas a crédito (si está habilitado)
@@ -841,7 +903,8 @@ class ThermalPrintService {
         );
         documentos.add(pdfCredito);
       } else {
-        await logger.debug('ThermalPrint', 'Facturas crédito: deshabilitado en configuración');
+        await logger.debug(
+            'ThermalPrint', 'Facturas crédito: deshabilitado en configuración');
       }
 
       // 3. Resumen general (si está habilitado)
@@ -857,14 +920,17 @@ class ThermalPrintService {
           depositos,
           notasCredito,
           nombreCaja,
-          mostrarCorrecciones ? correcciones : [], // Solo mostrar correcciones si se solicita
+          mostrarCorrecciones
+              ? correcciones
+              : [], // Solo mostrar correcciones si se solicita
           tarjetas,
           otrosEntrada,
           otrosSalida,
         );
         documentos.add(pdfResumen);
       } else {
-        await logger.debug('ThermalPrint', 'Resumen general: deshabilitado en configuración');
+        await logger.debug(
+            'ThermalPrint', 'Resumen general: deshabilitado en configuración');
       }
 
       // 4. Ticket de entrega (si está habilitado)
@@ -886,13 +952,15 @@ class ThermalPrintService {
         );
         documentos.add(pdfEntrega);
       } else {
-        await logger.debug('ThermalPrint', 'Ticket entrega: deshabilitado en configuración');
+        await logger.debug(
+            'ThermalPrint', 'Ticket entrega: deshabilitado en configuración');
       }
 
       // 5. Don José (si está habilitado y hay datos)
       if (config.imprimirDonJose && donJose.isNotEmpty) {
         await logger.debug('ThermalPrint', 'Generando ticket Don José');
-        await logger.info('ThermalPrint', 'Don José: ${donJose.length} registros encontrados');
+        await logger.info('ThermalPrint',
+            'Don José: ${donJose.length} registros encontrados');
         final pdfDonJose = await generarTicketDonJose(
           cierre,
           donJose,
@@ -900,13 +968,17 @@ class ThermalPrintService {
         );
         documentos.add(pdfDonJose);
       } else if (!config.imprimirDonJose) {
-        await logger.debug('ThermalPrint', 'Don José: deshabilitado en configuración');
+        await logger.debug(
+            'ThermalPrint', 'Don José: deshabilitado en configuración');
       } else {
-        await logger.debug('ThermalPrint', 'Don José: sin datos, no se generará ticket');
+        await logger.debug(
+            'ThermalPrint', 'Don José: sin datos, no se generará ticket');
       }
 
-      await logger.info('ThermalPrint', '${documentos.length} documentos térmicos generados exitosamente');
-      await logger.logPrintOperation('Documentos térmicos', documentCount: documentos.length);
+      await logger.info('ThermalPrint',
+          '${documentos.length} documentos térmicos generados exitosamente');
+      await logger.logPrintOperation('Documentos térmicos',
+          documentCount: documentos.length);
       return documentos;
     } catch (e, stackTrace) {
       await logger.logPrintError('Documentos térmicos', e, stackTrace);

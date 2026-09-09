@@ -80,12 +80,18 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       final facturas = await _db.getFacturasByCierre(widget.cierre.id!);
       final boletas = await _db.getBoletasCreditoByCierre(widget.cierre.id!);
       final pagos = await _db.getPagosByCierre(widget.cierre.id!);
-      final transferencias = await _db.getMovimientosByCierre(widget.cierre.id!, tipo: 'transferencia');
-      final cheques = await _db.getMovimientosByCierre(widget.cierre.id!, tipo: 'cheque');
-      final depositos = await _db.getMovimientosByCierre(widget.cierre.id!, tipo: 'deposito');
-      final notasCredito = await _db.getMovimientosByCierre(widget.cierre.id!, tipo: 'nota_credito');
-      final otrosEntrada = await _db.getMovimientosByCierre(widget.cierre.id!, tipo: 'otros_entrada');
-      final otrosSalida = await _db.getMovimientosByCierre(widget.cierre.id!, tipo: 'otros_salida');
+      final transferencias = await _db.getMovimientosByCierre(widget.cierre.id!,
+          tipo: 'transferencia');
+      final cheques =
+          await _db.getMovimientosByCierre(widget.cierre.id!, tipo: 'cheque');
+      final depositos =
+          await _db.getMovimientosByCierre(widget.cierre.id!, tipo: 'deposito');
+      final notasCredito = await _db.getMovimientosByCierre(widget.cierre.id!,
+          tipo: 'nota_credito');
+      final otrosEntrada = await _db.getMovimientosByCierre(widget.cierre.id!,
+          tipo: 'otros_entrada');
+      final otrosSalida = await _db.getMovimientosByCierre(widget.cierre.id!,
+          tipo: 'otros_salida');
       final donJose = await _db.getDonJoseByCierre(widget.cierre.id!);
 
       setState(() {
@@ -111,7 +117,8 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
     }
   }
 
-  void _registrarCorreccion(String descripcion, String tipoDoc, String? numeroDoc, String campo, String? valorAntes, String? valorNuevo) {
+  void _registrarCorreccion(String descripcion, String tipoDoc,
+      String? numeroDoc, String campo, String? valorAntes, String? valorNuevo) {
     final correccion = CorreccionCierre(
       cierreId: widget.cierre.id!,
       fechaCorreccion: DateTime.now(),
@@ -128,25 +135,52 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
   // FACTURAS
   Future<void> _editarFactura(Factura factura) async {
-    final montoController = TextEditingController(text: _numberFormat.format(factura.monto));
+    final montoContadoController =
+        TextEditingController(text: _numberFormat.format(factura.montoContado));
+    final montoCreditoController =
+        TextEditingController(text: _numberFormat.format(factura.montoCredito));
 
-    final resultado = await showDialog<double>(
+    final resultado = await showDialog<Map<String, double>?>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Editar Factura ${factura.numero}'),
-        content: TextField(
-          controller: montoController,
-          decoration: const InputDecoration(labelText: 'Monto', prefixText: '\$'),
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: montoContadoController,
+              decoration: const InputDecoration(
+                  labelText: 'Monto Contado', prefixText: '\$'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: montoCreditoController,
+              decoration: const InputDecoration(
+                  labelText: 'Monto Crédito', prefixText: '\$'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
+          ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
-              final texto = montoController.text.replaceAll('.', '').replaceAll(',', '');
-              final nuevoMonto = double.tryParse(texto);
-              if (nuevoMonto != null) Navigator.pop(context, nuevoMonto);
+              final nc = double.tryParse(montoContadoController.text
+                      .replaceAll('.', '')
+                      .replaceAll(',', '')) ??
+                  0;
+              final cr = double.tryParse(montoCreditoController.text
+                      .replaceAll('.', '')
+                      .replaceAll(',', '')) ??
+                  0;
+              if (nc + cr > 0) {
+                Navigator.pop(context, {'contado': nc, 'credito': cr});
+              }
             },
             child: const Text('Guardar'),
           ),
@@ -154,18 +188,35 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       ),
     );
 
-    if (resultado != null && resultado != factura.monto) {
-      await _db.updateFactura(Factura(
-        id: factura.id, cierreId: factura.cierreId, numero: factura.numero,
-        monto: resultado, esCredito: factura.esCredito, fecha: factura.fecha,
-      ));
+    if (resultado != null) {
+      final nuevoContado = resultado['contado']!;
+      final nuevoCredito = resultado['credito']!;
+      if (nuevoContado != factura.montoContado ||
+          nuevoCredito != factura.montoCredito) {
+        final anterior = _formatCurrency(factura.monto);
+        await _db.updateFactura(Factura(
+          id: factura.id,
+          cierreId: factura.cierreId,
+          numero: factura.numero,
+          montoContado: nuevoContado,
+          montoCredito: nuevoCredito,
+          fecha: factura.fecha,
+        ));
 
-      final tipo = factura.esCredito ? 'Factura Crédito' : 'Factura Contado';
-      _registrarCorreccion(
-        'Corrección $tipo #${factura.numero}: antes ${_formatCurrency(factura.monto)}, ahora ${_formatCurrency(resultado)}',
-        tipo, factura.numero, 'monto', _formatCurrency(factura.monto), _formatCurrency(resultado),
-      );
-      await _cargarDatos();
+        final nuevo = _formatCurrency(nuevoContado + nuevoCredito);
+        final tipo = factura.esMixto
+            ? 'Factura Mixta'
+            : (factura.esCredito ? 'Factura Crédito' : 'Factura Contado');
+        _registrarCorreccion(
+          'Corrección $tipo #${factura.numero}: antes $anterior, ahora $nuevo',
+          tipo,
+          factura.numero,
+          'monto',
+          anterior,
+          nuevo,
+        );
+        await _cargarDatos();
+      }
     }
   }
 
@@ -175,7 +226,11 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       final tipo = factura.esCredito ? 'Factura Crédito' : 'Factura Contado';
       _registrarCorreccion(
         'Eliminada $tipo #${factura.numero} de ${_formatCurrency(factura.monto)}',
-        tipo, factura.numero, 'eliminado', _formatCurrency(factura.monto), null,
+        tipo,
+        factura.numero,
+        'eliminado',
+        _formatCurrency(factura.monto),
+        null,
       );
       await _cargarDatos();
     }
@@ -183,7 +238,8 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
   // BOLETAS CRÉDITO
   Future<void> _editarBoletaCredito(BoletaCredito boleta) async {
-    final montoController = TextEditingController(text: _numberFormat.format(boleta.monto));
+    final montoController =
+        TextEditingController(text: _numberFormat.format(boleta.monto));
 
     final resultado = await showDialog<double>(
       context: context,
@@ -191,15 +247,19 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
         title: Text('Editar Boleta Crédito\nRUT: ${boleta.rut}'),
         content: TextField(
           controller: montoController,
-          decoration: const InputDecoration(labelText: 'Monto', prefixText: '\$'),
+          decoration:
+              const InputDecoration(labelText: 'Monto', prefixText: '\$'),
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
-              final texto = montoController.text.replaceAll('.', '').replaceAll(',', '');
+              final texto =
+                  montoController.text.replaceAll('.', '').replaceAll(',', '');
               final nuevoMonto = double.tryParse(texto);
               if (nuevoMonto != null) Navigator.pop(context, nuevoMonto);
             },
@@ -211,13 +271,20 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
     if (resultado != null && resultado != boleta.monto) {
       await _db.updateBoletaCredito(BoletaCredito(
-        id: boleta.id, cierreId: boleta.cierreId, rut: boleta.rut,
-        monto: resultado, fecha: boleta.fecha,
+        id: boleta.id,
+        cierreId: boleta.cierreId,
+        rut: boleta.rut,
+        monto: resultado,
+        fecha: boleta.fecha,
       ));
 
       _registrarCorreccion(
         'Corrección Boleta Crédito RUT ${boleta.rut}: antes ${_formatCurrency(boleta.monto)}, ahora ${_formatCurrency(resultado)}',
-        'Boleta Crédito', boleta.rut, 'monto', _formatCurrency(boleta.monto), _formatCurrency(resultado),
+        'Boleta Crédito',
+        boleta.rut,
+        'monto',
+        _formatCurrency(boleta.monto),
+        _formatCurrency(resultado),
       );
       await _cargarDatos();
     }
@@ -228,7 +295,11 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       await _db.deleteBoletaCredito(boleta.id!);
       _registrarCorreccion(
         'Eliminada Boleta Crédito RUT ${boleta.rut} de ${_formatCurrency(boleta.monto)}',
-        'Boleta Crédito', boleta.rut, 'eliminado', _formatCurrency(boleta.monto), null,
+        'Boleta Crédito',
+        boleta.rut,
+        'eliminado',
+        _formatCurrency(boleta.monto),
+        null,
       );
       await _cargarDatos();
     }
@@ -236,7 +307,8 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
   // PAGOS
   Future<void> _editarPago(Pago pago) async {
-    final montoController = TextEditingController(text: _numberFormat.format(pago.monto));
+    final montoController =
+        TextEditingController(text: _numberFormat.format(pago.monto));
 
     final resultado = await showDialog<double>(
       context: context,
@@ -244,15 +316,19 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
         title: Text('Editar Pago\nRUT: ${pago.rut}'),
         content: TextField(
           controller: montoController,
-          decoration: const InputDecoration(labelText: 'Monto', prefixText: '\$'),
+          decoration:
+              const InputDecoration(labelText: 'Monto', prefixText: '\$'),
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
-              final texto = montoController.text.replaceAll('.', '').replaceAll(',', '');
+              final texto =
+                  montoController.text.replaceAll('.', '').replaceAll(',', '');
               final nuevoMonto = double.tryParse(texto);
               if (nuevoMonto != null) Navigator.pop(context, nuevoMonto);
             },
@@ -264,13 +340,20 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
     if (resultado != null && resultado != pago.monto) {
       await _db.updatePago(Pago(
-        id: pago.id, cierreId: pago.cierreId, rut: pago.rut,
-        monto: resultado, fecha: pago.fecha,
+        id: pago.id,
+        cierreId: pago.cierreId,
+        rut: pago.rut,
+        monto: resultado,
+        fecha: pago.fecha,
       ));
 
       _registrarCorreccion(
         'Corrección Pago RUT ${pago.rut}: antes ${_formatCurrency(pago.monto)}, ahora ${_formatCurrency(resultado)}',
-        'Pago', pago.rut, 'monto', _formatCurrency(pago.monto), _formatCurrency(resultado),
+        'Pago',
+        pago.rut,
+        'monto',
+        _formatCurrency(pago.monto),
+        _formatCurrency(resultado),
       );
       await _cargarDatos();
     }
@@ -281,31 +364,42 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       await _db.deletePago(pago.id!);
       _registrarCorreccion(
         'Eliminado Pago RUT ${pago.rut} de ${_formatCurrency(pago.monto)}',
-        'Pago', pago.rut, 'eliminado', _formatCurrency(pago.monto), null,
+        'Pago',
+        pago.rut,
+        'eliminado',
+        _formatCurrency(pago.monto),
+        null,
       );
       await _cargarDatos();
     }
   }
 
   // MOVIMIENTOS SIMPLES (Transferencias, Cheques, Depósitos, Notas Crédito, Otros)
-  Future<void> _editarMovimiento(MovimientoSimple mov, String tipoNombre) async {
-    final montoController = TextEditingController(text: _numberFormat.format(mov.monto));
+  Future<void> _editarMovimiento(
+      MovimientoSimple mov, String tipoNombre) async {
+    final montoController =
+        TextEditingController(text: _numberFormat.format(mov.monto));
 
     final resultado = await showDialog<double>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Editar $tipoNombre${mov.numero != null ? "\n#${mov.numero}" : ""}'),
+        title: Text(
+            'Editar $tipoNombre${mov.numero != null ? "\n#${mov.numero}" : ""}'),
         content: TextField(
           controller: montoController,
-          decoration: const InputDecoration(labelText: 'Monto', prefixText: '\$'),
+          decoration:
+              const InputDecoration(labelText: 'Monto', prefixText: '\$'),
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
-              final texto = montoController.text.replaceAll('.', '').replaceAll(',', '');
+              final texto =
+                  montoController.text.replaceAll('.', '').replaceAll(',', '');
               final nuevoMonto = double.tryParse(texto);
               if (nuevoMonto != null) Navigator.pop(context, nuevoMonto);
             },
@@ -317,28 +411,41 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
     if (resultado != null && resultado != mov.monto) {
       await _db.updateMovimiento(MovimientoSimple(
-        id: mov.id, cierreId: mov.cierreId, tipo: mov.tipo,
-        numero: mov.numero, rut: mov.rut, monto: resultado, fecha: mov.fecha,
+        id: mov.id,
+        cierreId: mov.cierreId,
+        tipo: mov.tipo,
+        numero: mov.numero,
+        rut: mov.rut,
+        monto: resultado,
+        fecha: mov.fecha,
       ));
 
       final identificador = mov.numero ?? mov.rut ?? '';
       _registrarCorreccion(
         'Corrección $tipoNombre ${identificador.isNotEmpty ? "$identificador: " : ""}antes ${_formatCurrency(mov.monto)}, ahora ${_formatCurrency(resultado)}',
-        tipoNombre, identificador.isNotEmpty ? identificador : null, 'monto',
-        _formatCurrency(mov.monto), _formatCurrency(resultado),
+        tipoNombre,
+        identificador.isNotEmpty ? identificador : null,
+        'monto',
+        _formatCurrency(mov.monto),
+        _formatCurrency(resultado),
       );
       await _cargarDatos();
     }
   }
 
-  Future<void> _eliminarMovimiento(MovimientoSimple mov, String tipoNombre) async {
+  Future<void> _eliminarMovimiento(
+      MovimientoSimple mov, String tipoNombre) async {
     final identificador = mov.numero ?? mov.rut ?? '';
-    if (await _confirmarEliminacion('$tipoNombre ${identificador.isNotEmpty ? identificador : ""}')) {
+    if (await _confirmarEliminacion(
+        '$tipoNombre ${identificador.isNotEmpty ? identificador : ""}')) {
       await _db.deleteMovimiento(mov.id!);
       _registrarCorreccion(
         'Eliminado $tipoNombre ${identificador.isNotEmpty ? "$identificador " : ""}de ${_formatCurrency(mov.monto)}',
-        tipoNombre, identificador.isNotEmpty ? identificador : null, 'eliminado',
-        _formatCurrency(mov.monto), null,
+        tipoNombre,
+        identificador.isNotEmpty ? identificador : null,
+        'eliminado',
+        _formatCurrency(mov.monto),
+        null,
       );
       await _cargarDatos();
     }
@@ -351,8 +458,12 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
         title: const Text('Confirmar eliminación'),
         content: Text('¿Eliminar $item?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Eliminar')),
         ],
       ),
     );
@@ -362,8 +473,8 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
   // MÉTODOS PARA AGREGAR NUEVOS DOCUMENTOS
   Future<void> _agregarFactura() async {
     final numeroController = TextEditingController();
-    final montoController = TextEditingController();
-    bool esCredito = false;
+    final montoContadoController = TextEditingController();
+    final montoCreditoController = TextEditingController();
 
     final resultado = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -375,33 +486,50 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
             children: [
               TextField(
                 controller: numeroController,
-                decoration: const InputDecoration(labelText: 'Número de Factura'),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: montoController,
-                decoration: const InputDecoration(labelText: 'Monto', prefixText: '\$'),
+                decoration:
+                    const InputDecoration(labelText: 'Número de Factura'),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
               const SizedBox(height: 16),
-              SwitchListTile(
-                title: const Text('Es Crédito'),
-                value: esCredito,
-                onChanged: (value) => setState(() => esCredito = value),
+              TextField(
+                controller: montoContadoController,
+                decoration: const InputDecoration(
+                    labelText: 'Monto Contado', prefixText: '\$'),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: montoCreditoController,
+                decoration: const InputDecoration(
+                    labelText: 'Monto Crédito', prefixText: '\$'),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar')),
             TextButton(
               onPressed: () {
                 final numero = numeroController.text;
-                final texto = montoController.text.replaceAll('.', '').replaceAll(',', '');
-                final monto = double.tryParse(texto);
-                if (numero.isNotEmpty && monto != null) {
-                  Navigator.pop(context, {'numero': numero, 'monto': monto, 'esCredito': esCredito});
+                final nc = double.tryParse(montoContadoController.text
+                        .replaceAll('.', '')
+                        .replaceAll(',', '')) ??
+                    0;
+                final cr = double.tryParse(montoCreditoController.text
+                        .replaceAll('.', '')
+                        .replaceAll(',', '')) ??
+                    0;
+                if (numero.isNotEmpty && (nc + cr) > 0) {
+                  Navigator.pop(context, {
+                    'numero': numero,
+                    'montoContado': nc,
+                    'montoCredito': cr,
+                  });
                 }
               },
               child: const Text('Agregar'),
@@ -412,19 +540,28 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
     );
 
     if (resultado != null) {
+      final nc = resultado['montoContado'] as double;
+      final cr = resultado['montoCredito'] as double;
+      final total = nc + cr;
       final nuevaFactura = Factura(
         cierreId: widget.cierre.id!,
-        numero: resultado['numero'],
-        monto: resultado['monto'],
-        esCredito: resultado['esCredito'],
+        numero: resultado['numero'] as String,
+        montoContado: nc,
+        montoCredito: cr,
         fecha: DateTime.now(),
       );
       await _db.insertFactura(nuevaFactura);
 
-      final tipo = resultado['esCredito'] ? 'Factura Crédito' : 'Factura Contado';
+      final tipo = nc > 0 && cr > 0
+          ? 'Factura Mixta'
+          : (cr > 0 ? 'Factura Crédito' : 'Factura Contado');
       _registrarCorreccion(
-        'Agregada $tipo #${resultado['numero']} de ${_formatCurrency(resultado['monto'])}',
-        tipo, resultado['numero'], 'agregado', null, _formatCurrency(resultado['monto']),
+        'Agregada $tipo #${resultado['numero']} de ${_formatCurrency(total)}',
+        tipo,
+        resultado['numero'] as String,
+        'agregado',
+        null,
+        _formatCurrency(total),
       );
       await _cargarDatos();
     }
@@ -449,18 +586,22 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: montoController,
-              decoration: const InputDecoration(labelText: 'Monto', prefixText: '\$'),
+              decoration:
+                  const InputDecoration(labelText: 'Monto', prefixText: '\$'),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
               final rut = rutController.text;
-              final texto = montoController.text.replaceAll('.', '').replaceAll(',', '');
+              final texto =
+                  montoController.text.replaceAll('.', '').replaceAll(',', '');
               final monto = double.tryParse(texto);
               if (rut.isNotEmpty && monto != null) {
                 Navigator.pop(context, {'rut': rut, 'monto': monto});
@@ -483,7 +624,11 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
       _registrarCorreccion(
         'Agregada Boleta Crédito RUT ${resultado['rut']} de ${_formatCurrency(resultado['monto'])}',
-        'Boleta Crédito', resultado['rut'], 'agregado', null, _formatCurrency(resultado['monto']),
+        'Boleta Crédito',
+        resultado['rut'],
+        'agregado',
+        null,
+        _formatCurrency(resultado['monto']),
       );
       await _cargarDatos();
     }
@@ -508,18 +653,22 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: montoController,
-              decoration: const InputDecoration(labelText: 'Monto', prefixText: '\$'),
+              decoration:
+                  const InputDecoration(labelText: 'Monto', prefixText: '\$'),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
               final rut = rutController.text;
-              final texto = montoController.text.replaceAll('.', '').replaceAll(',', '');
+              final texto =
+                  montoController.text.replaceAll('.', '').replaceAll(',', '');
               final monto = double.tryParse(texto);
               if (rut.isNotEmpty && monto != null) {
                 Navigator.pop(context, {'rut': rut, 'monto': monto});
@@ -542,7 +691,11 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
       _registrarCorreccion(
         'Agregado Pago RUT ${resultado['rut']} de ${_formatCurrency(resultado['monto'])}',
-        'Pago', resultado['rut'], 'agregado', null, _formatCurrency(resultado['monto']),
+        'Pago',
+        resultado['rut'],
+        'agregado',
+        null,
+        _formatCurrency(resultado['monto']),
       );
       await _cargarDatos();
     }
@@ -564,8 +717,9 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
               TextField(
                 controller: numeroController,
                 decoration: InputDecoration(
-                  labelText: tipo == 'cheque' ? 'Número de Cheque (opcional)' : 'Número de Nota (opcional)'
-                ),
+                    labelText: tipo == 'cheque'
+                        ? 'Número de Cheque (opcional)'
+                        : 'Número de Nota (opcional)'),
                 keyboardType: TextInputType.number,
               ),
             if (tipo == 'cheque') ...[
@@ -579,17 +733,21 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: montoController,
-              decoration: const InputDecoration(labelText: 'Monto', prefixText: '\$'),
+              decoration:
+                  const InputDecoration(labelText: 'Monto', prefixText: '\$'),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
-              final texto = montoController.text.replaceAll('.', '').replaceAll(',', '');
+              final texto =
+                  montoController.text.replaceAll('.', '').replaceAll(',', '');
               final monto = double.tryParse(texto);
               if (monto != null) {
                 Navigator.pop(context, {
@@ -616,10 +774,15 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       );
       await _db.insertMovimiento(nuevoMovimiento);
 
-      final identificador = resultado['numero'].isNotEmpty ? resultado['numero'] : '';
+      final identificador =
+          resultado['numero'].isNotEmpty ? resultado['numero'] : '';
       _registrarCorreccion(
         'Agregado $tipoNombre ${identificador.isNotEmpty ? "#$identificador " : ""}de ${_formatCurrency(resultado['monto'])}',
-        tipoNombre, identificador.isNotEmpty ? identificador : null, 'agregado', null, _formatCurrency(resultado['monto']),
+        tipoNombre,
+        identificador.isNotEmpty ? identificador : null,
+        'agregado',
+        null,
+        _formatCurrency(resultado['monto']),
       );
       await _cargarDatos();
     }
@@ -627,27 +790,40 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
   Future<void> _guardarCambios() async {
     try {
-      final textoEfectivo = _efectivoController.text.replaceAll('.', '').replaceAll(',', '');
-      final nuevoEfectivo = double.tryParse(textoEfectivo) ?? widget.cierre.efectivo;
+      final textoEfectivo =
+          _efectivoController.text.replaceAll('.', '').replaceAll(',', '');
+      final nuevoEfectivo =
+          double.tryParse(textoEfectivo) ?? widget.cierre.efectivo;
 
-      final textoTarjetas = _tarjetasController.text.replaceAll('.', '').replaceAll(',', '');
-      final nuevoTarjetas = double.tryParse(textoTarjetas) ?? widget.cierre.tarjetas;
+      final textoTarjetas =
+          _tarjetasController.text.replaceAll('.', '').replaceAll(',', '');
+      final nuevoTarjetas =
+          double.tryParse(textoTarjetas) ?? widget.cierre.tarjetas;
 
       if (nuevoEfectivo != widget.cierre.efectivo) {
         _registrarCorreccion(
           'Corrección Efectivo: antes ${_formatCurrency(widget.cierre.efectivo)}, ahora ${_formatCurrency(nuevoEfectivo)}',
-          'Efectivo', null, 'monto', _formatCurrency(widget.cierre.efectivo), _formatCurrency(nuevoEfectivo),
+          'Efectivo',
+          null,
+          'monto',
+          _formatCurrency(widget.cierre.efectivo),
+          _formatCurrency(nuevoEfectivo),
         );
       }
 
       if (nuevoTarjetas != widget.cierre.tarjetas) {
         _registrarCorreccion(
           'Corrección Tarjetas: antes ${_formatCurrency(widget.cierre.tarjetas)}, ahora ${_formatCurrency(nuevoTarjetas)}',
-          'Tarjetas', null, 'monto', _formatCurrency(widget.cierre.tarjetas), _formatCurrency(nuevoTarjetas),
+          'Tarjetas',
+          null,
+          'monto',
+          _formatCurrency(widget.cierre.tarjetas),
+          _formatCurrency(nuevoTarjetas),
         );
       }
 
-      final cierreActualizado = widget.cierre.copyWith(efectivo: nuevoEfectivo, tarjetas: nuevoTarjetas);
+      final cierreActualizado = widget.cierre
+          .copyWith(efectivo: nuevoEfectivo, tarjetas: nuevoTarjetas);
       await _db.updateCierre(cierreActualizado);
 
       for (final correccion in _correcciones) {
@@ -723,7 +899,8 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       // Imprimir cada documento generado
       for (int i = 0; i < documentos.length; i++) {
         final doc = documentos[i];
-        String nombreDoc = 'Cierre_Sesion${widget.cierre.numeroSesion}_Doc${i + 1}';
+        String nombreDoc =
+            'Cierre_Sesion${widget.cierre.numeroSesion}_Doc${i + 1}';
 
         await Printing.layoutPdf(
           onLayout: (format) async => doc.save(),
@@ -735,9 +912,11 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
       String mensaje;
       if (rutasGuardadas.isEmpty) {
-        mensaje = 'Impreso correctamente.\nConfigure las rutas de guardado en Configuración para guardar automáticamente.';
+        mensaje =
+            'Impreso correctamente.\nConfigure las rutas de guardado en Configuración para guardar automáticamente.';
       } else {
-        mensaje = 'Impreso y guardado correctamente:\n${rutasGuardadas.join('\n')}';
+        mensaje =
+            'Impreso y guardado correctamente:\n${rutasGuardadas.join('\n')}';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -746,7 +925,9 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al imprimir: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Error al imprimir: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -824,7 +1005,8 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
         // Imprimir cada documento generado
         for (int i = 0; i < documentos.length; i++) {
           final doc = documentos[i];
-          String nombreDoc = 'Cierre_Sesion${widget.cierre.numeroSesion}_Doc${i + 1}';
+          String nombreDoc =
+              'Cierre_Sesion${widget.cierre.numeroSesion}_Doc${i + 1}';
 
           await Printing.directPrintPdf(
             printer: impresora,
@@ -835,7 +1017,8 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Impreso directamente y PDF guardado')),
+            const SnackBar(
+                content: Text('Impreso directamente y PDF guardado')),
           );
         }
       } else {
@@ -851,7 +1034,9 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al imprimir: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Error al imprimir: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -868,7 +1053,8 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Por favor configure las rutas de guardado en Configuración'),
+              content: Text(
+                  'Por favor configure las rutas de guardado en Configuración'),
               backgroundColor: Colors.orange,
             ),
           );
@@ -904,19 +1090,24 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('PDF guardado correctamente:\n${rutasGuardadas.join('\n')}')),
+          SnackBar(
+              content: Text(
+                  'PDF guardado correctamente:\n${rutasGuardadas.join('\n')}')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar PDF: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Error al guardar PDF: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
   }
 
-  Widget _buildDocumentoCard(String titulo, IconData icono, Color color, List<Widget> items, VoidCallback? onAgregar) {
+  Widget _buildDocumentoCard(String titulo, IconData icono, Color color,
+      List<Widget> items, VoidCallback? onAgregar) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -938,7 +1129,8 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
         if (items.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text('No hay $titulo registrados', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+            child: Text('No hay $titulo registrados',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12)),
           )
         else
           ...items,
@@ -951,7 +1143,8 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Editar Cierre - ${_dateFormat.format(widget.cierre.fecha)}'),
+        title:
+            Text('Editar Cierre - ${_dateFormat.format(widget.cierre.fecha)}'),
         actions: [
           if (_hasChanges || _correcciones.isNotEmpty)
             IconButton(
@@ -1024,11 +1217,15 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Sesión ${widget.cierre.numeroSesion}', style: Theme.of(context).textTheme.titleLarge),
+                          Text('Sesión ${widget.cierre.numeroSesion}',
+                              style: Theme.of(context).textTheme.titleLarge),
                           const SizedBox(height: 8),
-                          Text('Fecha: ${_dateFormat.format(widget.cierre.fecha)}'),
-                          if (widget.cierre.nombreCajero != null) Text('Cajero: ${widget.cierre.nombreCajero}'),
-                          Text('Estado: ${widget.cierre.cerrada ? "Cerrada" : "Abierta"}'),
+                          Text(
+                              'Fecha: ${_dateFormat.format(widget.cierre.fecha)}'),
+                          if (widget.cierre.nombreCajero != null)
+                            Text('Cajero: ${widget.cierre.nombreCajero}'),
+                          Text(
+                              'Estado: ${widget.cierre.cerrada ? "Cerrada" : "Abierta"}'),
                         ],
                       ),
                     ),
@@ -1042,20 +1239,31 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Montos Principales', style: Theme.of(context).textTheme.titleMedium),
+                          Text('Montos Principales',
+                              style: Theme.of(context).textTheme.titleMedium),
                           const SizedBox(height: 16),
                           TextField(
                             controller: _efectivoController,
-                            decoration: const InputDecoration(labelText: 'Efectivo', prefixText: '\$', border: OutlineInputBorder()),
+                            decoration: const InputDecoration(
+                                labelText: 'Efectivo',
+                                prefixText: '\$',
+                                border: OutlineInputBorder()),
                             keyboardType: TextInputType.number,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
                           ),
                           const SizedBox(height: 16),
                           TextField(
                             controller: _tarjetasController,
-                            decoration: const InputDecoration(labelText: 'Tarjetas', prefixText: '\$', border: OutlineInputBorder()),
+                            decoration: const InputDecoration(
+                                labelText: 'Tarjetas',
+                                prefixText: '\$',
+                                border: OutlineInputBorder()),
                             keyboardType: TextInputType.number,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
                           ),
                         ],
                       ),
@@ -1064,171 +1272,283 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                   const SizedBox(height: 16),
 
                   // Documentos
-                  _buildDocumentoCard('Facturas', Icons.receipt, Colors.blue,
-                    _facturas.map((f) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: Icon(f.esCredito ? Icons.credit_card : Icons.attach_money,
-                          color: f.esCredito ? Colors.orange : Colors.green),
-                        title: Text('Factura #${f.numero}'),
-                        subtitle: Text('${f.esCredito ? "Crédito" : "Contado"} - ${_formatCurrency(f.monto)}'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(icon: const Icon(Icons.edit), onPressed: () => _editarFactura(f)),
-                            IconButton(icon: const Icon(Icons.delete), onPressed: () => _eliminarFactura(f)),
-                          ],
-                        ),
-                      ),
-                    )).toList(),
+                  _buildDocumentoCard(
+                    'Facturas',
+                    Icons.receipt,
+                    Colors.blue,
+                    _facturas
+                        .map((f) => Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: Icon(
+                                    f.esCredito
+                                        ? Icons.credit_card
+                                        : Icons.attach_money,
+                                    color: f.esCredito
+                                        ? Colors.orange
+                                        : Colors.green),
+                                title: Text('Factura #${f.numero}'),
+                                subtitle: Text(
+                                    '${f.esCredito ? "Crédito" : "Contado"} - ${_formatCurrency(f.monto)}'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () => _editarFactura(f)),
+                                    IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () => _eliminarFactura(f)),
+                                  ],
+                                ),
+                              ),
+                            ))
+                        .toList(),
                     _agregarFactura,
                   ),
 
-                  _buildDocumentoCard('Boletas a Crédito', Icons.credit_score, Colors.orange,
-                    _boletasCredito.map((b) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.credit_score, color: Colors.orange),
-                        title: Text('RUT: ${b.rut}'),
-                        subtitle: Text(_formatCurrency(b.monto)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(icon: const Icon(Icons.edit), onPressed: () => _editarBoletaCredito(b)),
-                            IconButton(icon: const Icon(Icons.delete), onPressed: () => _eliminarBoletaCredito(b)),
-                          ],
-                        ),
-                      ),
-                    )).toList(),
+                  _buildDocumentoCard(
+                    'Boletas a Crédito',
+                    Icons.credit_score,
+                    Colors.orange,
+                    _boletasCredito
+                        .map((b) => Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: const Icon(Icons.credit_score,
+                                    color: Colors.orange),
+                                title: Text('RUT: ${b.rut}'),
+                                subtitle: Text(_formatCurrency(b.monto)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () =>
+                                            _editarBoletaCredito(b)),
+                                    IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () =>
+                                            _eliminarBoletaCredito(b)),
+                                  ],
+                                ),
+                              ),
+                            ))
+                        .toList(),
                     _agregarBoletaCredito,
                   ),
 
-                  _buildDocumentoCard('Pagos', Icons.payment, Colors.green,
-                    _pagos.map((p) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.payment, color: Colors.green),
-                        title: Text('RUT: ${p.rut}'),
-                        subtitle: Text(_formatCurrency(p.monto)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(icon: const Icon(Icons.edit), onPressed: () => _editarPago(p)),
-                            IconButton(icon: const Icon(Icons.delete), onPressed: () => _eliminarPago(p)),
-                          ],
-                        ),
-                      ),
-                    )).toList(),
+                  _buildDocumentoCard(
+                    'Pagos',
+                    Icons.payment,
+                    Colors.green,
+                    _pagos
+                        .map((p) => Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: const Icon(Icons.payment,
+                                    color: Colors.green),
+                                title: Text('RUT: ${p.rut}'),
+                                subtitle: Text(_formatCurrency(p.monto)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () => _editarPago(p)),
+                                    IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () => _eliminarPago(p)),
+                                  ],
+                                ),
+                              ),
+                            ))
+                        .toList(),
                     _agregarPago,
                   ),
 
-                  _buildDocumentoCard('Transferencias', Icons.swap_horiz, Colors.purple,
-                    _transferencias.map((t) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.swap_horiz, color: Colors.purple),
-                        title: Text(_formatCurrency(t.monto)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(icon: const Icon(Icons.edit), onPressed: () => _editarMovimiento(t, 'Transferencia')),
-                            IconButton(icon: const Icon(Icons.delete), onPressed: () => _eliminarMovimiento(t, 'Transferencia')),
-                          ],
-                        ),
-                      ),
-                    )).toList(),
+                  _buildDocumentoCard(
+                    'Transferencias',
+                    Icons.swap_horiz,
+                    Colors.purple,
+                    _transferencias
+                        .map((t) => Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: const Icon(Icons.swap_horiz,
+                                    color: Colors.purple),
+                                title: Text(_formatCurrency(t.monto)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () => _editarMovimiento(
+                                            t, 'Transferencia')),
+                                    IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () => _eliminarMovimiento(
+                                            t, 'Transferencia')),
+                                  ],
+                                ),
+                              ),
+                            ))
+                        .toList(),
                     () => _agregarMovimiento('transferencia', 'Transferencia'),
                   ),
 
-                  _buildDocumentoCard('Cheques', Icons.card_giftcard, Colors.brown,
-                    _cheques.map((c) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.card_giftcard, color: Colors.brown),
-                        title: Text('${c.numero != null ? "Cheque #${c.numero}" : "Cheque"}${c.rut != null ? " - RUT: ${c.rut}" : ""}'),
-                        subtitle: Text(_formatCurrency(c.monto)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(icon: const Icon(Icons.edit), onPressed: () => _editarMovimiento(c, 'Cheque')),
-                            IconButton(icon: const Icon(Icons.delete), onPressed: () => _eliminarMovimiento(c, 'Cheque')),
-                          ],
-                        ),
-                      ),
-                    )).toList(),
+                  _buildDocumentoCard(
+                    'Cheques',
+                    Icons.card_giftcard,
+                    Colors.brown,
+                    _cheques
+                        .map((c) => Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: const Icon(Icons.card_giftcard,
+                                    color: Colors.brown),
+                                title: Text(
+                                    '${c.numero != null ? "Cheque #${c.numero}" : "Cheque"}${c.rut != null ? " - RUT: ${c.rut}" : ""}'),
+                                subtitle: Text(_formatCurrency(c.monto)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () =>
+                                            _editarMovimiento(c, 'Cheque')),
+                                    IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () =>
+                                            _eliminarMovimiento(c, 'Cheque')),
+                                  ],
+                                ),
+                              ),
+                            ))
+                        .toList(),
                     () => _agregarMovimiento('cheque', 'Cheque'),
                   ),
 
-                  _buildDocumentoCard('Depósitos', Icons.account_balance, Colors.teal,
-                    _depositos.map((d) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.account_balance, color: Colors.teal),
-                        title: Text(_formatCurrency(d.monto)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(icon: const Icon(Icons.edit), onPressed: () => _editarMovimiento(d, 'Depósito')),
-                            IconButton(icon: const Icon(Icons.delete), onPressed: () => _eliminarMovimiento(d, 'Depósito')),
-                          ],
-                        ),
-                      ),
-                    )).toList(),
+                  _buildDocumentoCard(
+                    'Depósitos',
+                    Icons.account_balance,
+                    Colors.teal,
+                    _depositos
+                        .map((d) => Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: const Icon(Icons.account_balance,
+                                    color: Colors.teal),
+                                title: Text(_formatCurrency(d.monto)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () =>
+                                            _editarMovimiento(d, 'Depósito')),
+                                    IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () =>
+                                            _eliminarMovimiento(d, 'Depósito')),
+                                  ],
+                                ),
+                              ),
+                            ))
+                        .toList(),
                     () => _agregarMovimiento('deposito', 'Depósito'),
                   ),
 
-                  _buildDocumentoCard('Notas de Crédito', Icons.note, Colors.red,
-                    _notasCredito.map((n) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.note, color: Colors.red),
-                        title: Text(n.numero != null ? 'Nota #${n.numero}' : 'Nota de Crédito'),
-                        subtitle: Text(_formatCurrency(n.monto)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(icon: const Icon(Icons.edit), onPressed: () => _editarMovimiento(n, 'Nota Crédito')),
-                            IconButton(icon: const Icon(Icons.delete), onPressed: () => _eliminarMovimiento(n, 'Nota Crédito')),
-                          ],
-                        ),
-                      ),
-                    )).toList(),
+                  _buildDocumentoCard(
+                    'Notas de Crédito',
+                    Icons.note,
+                    Colors.red,
+                    _notasCredito
+                        .map((n) => Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading:
+                                    const Icon(Icons.note, color: Colors.red),
+                                title: Text(n.numero != null
+                                    ? 'Nota #${n.numero}'
+                                    : 'Nota de Crédito'),
+                                subtitle: Text(_formatCurrency(n.monto)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () => _editarMovimiento(
+                                            n, 'Nota Crédito')),
+                                    IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () => _eliminarMovimiento(
+                                            n, 'Nota Crédito')),
+                                  ],
+                                ),
+                              ),
+                            ))
+                        .toList(),
                     () => _agregarMovimiento('nota_credito', 'Nota Crédito'),
                   ),
 
-                  _buildDocumentoCard('Otros (Entrada)', Icons.add_circle, Colors.indigo,
-                    _otrosEntrada.map((o) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.add_circle, color: Colors.indigo),
-                        title: Text(_formatCurrency(o.monto)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(icon: const Icon(Icons.edit), onPressed: () => _editarMovimiento(o, 'Otros Entrada')),
-                            IconButton(icon: const Icon(Icons.delete), onPressed: () => _eliminarMovimiento(o, 'Otros Entrada')),
-                          ],
-                        ),
-                      ),
-                    )).toList(),
+                  _buildDocumentoCard(
+                    'Otros (Entrada)',
+                    Icons.add_circle,
+                    Colors.indigo,
+                    _otrosEntrada
+                        .map((o) => Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: const Icon(Icons.add_circle,
+                                    color: Colors.indigo),
+                                title: Text(_formatCurrency(o.monto)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () => _editarMovimiento(
+                                            o, 'Otros Entrada')),
+                                    IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () => _eliminarMovimiento(
+                                            o, 'Otros Entrada')),
+                                  ],
+                                ),
+                              ),
+                            ))
+                        .toList(),
                     () => _agregarMovimiento('otros_entrada', 'Otros Entrada'),
                   ),
 
-                  _buildDocumentoCard('Otros (Salida)', Icons.remove_circle, Colors.deepOrange,
-                    _otrosSalida.map((o) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.remove_circle, color: Colors.deepOrange),
-                        title: Text(_formatCurrency(o.monto)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(icon: const Icon(Icons.edit), onPressed: () => _editarMovimiento(o, 'Otros Salida')),
-                            IconButton(icon: const Icon(Icons.delete), onPressed: () => _eliminarMovimiento(o, 'Otros Salida')),
-                          ],
-                        ),
-                      ),
-                    )).toList(),
+                  _buildDocumentoCard(
+                    'Otros (Salida)',
+                    Icons.remove_circle,
+                    Colors.deepOrange,
+                    _otrosSalida
+                        .map((o) => Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                leading: const Icon(Icons.remove_circle,
+                                    color: Colors.deepOrange),
+                                title: Text(_formatCurrency(o.monto)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () => _editarMovimiento(
+                                            o, 'Otros Salida')),
+                                    IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () => _eliminarMovimiento(
+                                            o, 'Otros Salida')),
+                                  ],
+                                ),
+                              ),
+                            ))
+                        .toList(),
                     () => _agregarMovimiento('otros_salida', 'Otros Salida'),
                   ),
 
@@ -1241,13 +1561,19 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Correcciones pendientes (${_correcciones.length})',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.orange[800])),
+                            Text(
+                                'Correcciones pendientes (${_correcciones.length})',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(color: Colors.orange[800])),
                             const SizedBox(height: 8),
                             ..._correcciones.map((c) => Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Text('• ${c.descripcion}', style: const TextStyle(fontSize: 14)),
-                            )),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 4),
+                                  child: Text('• ${c.descripcion}',
+                                      style: const TextStyle(fontSize: 14)),
+                                )),
                           ],
                         ),
                       ),
@@ -1263,7 +1589,8 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                         icon: const Icon(Icons.save),
                         label: const Text('Guardar Cambios'),
                         onPressed: _guardarCambios,
-                        style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                        style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.all(16)),
                       ),
                     ),
                 ],

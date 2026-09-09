@@ -52,8 +52,10 @@ class Factura {
       montoCredito = (map['monto_credito'] as num).toDouble();
     }
 
-    // If new columns are both 0, fall back to old behavior (pre-migration data)
-    if (montoContado == 0 && montoCredito == 0 && map.containsKey('monto')) {
+    // Fallback para datos pre-migración (filas sin las columnas nuevas)
+    if (!map.containsKey('monto_contado') &&
+        map.containsKey('monto') &&
+        map.containsKey('es_credito')) {
       final monto = (map['monto'] as num).toDouble();
       final esCredito = (map['es_credito'] as int) == 1;
       montoContado = esCredito ? 0 : monto;
