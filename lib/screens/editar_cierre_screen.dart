@@ -1844,6 +1844,39 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                     () => _agregarMovimiento('otros_salida', 'Otros Salida'),
                   ),
 
+                  if (_donJose.isNotEmpty) ...[
+                    _buildDocumentoCard(
+                      'Don José',
+                      Icons.store,
+                      Colors.amber,
+                      _donJose
+                          .map((d) => Card(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                child: ListTile(
+                                  leading: const Icon(Icons.store,
+                                      color: Colors.amber),
+                                  title: Text(d.numero ?? 'Sin número'),
+                                  subtitle: Text(_formatCurrency(d.monto)),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                          icon: const Icon(Icons.edit),
+                                          onPressed: () =>
+                                              _editarMovimiento(d, 'Don José')),
+                                      IconButton(
+                                          icon: const Icon(Icons.delete),
+                                          onPressed: () => _eliminarMovimiento(
+                                              d, 'Don José')),
+                                    ],
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+                      null,
+                    ),
+                  ],
+
                   // Resumen de correcciones
                   if (_correcciones.isNotEmpty) ...[
                     Card(
