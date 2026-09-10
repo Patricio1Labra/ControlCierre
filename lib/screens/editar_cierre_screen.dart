@@ -1357,16 +1357,17 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Información del cierre y Montos Principales
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Sesión
-                      Expanded(
-                        child: Card(
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Sesión
+                        Card(
                           child: Padding(
                             padding: const EdgeInsets.all(16),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text('Sesión ${widget.cierre.numeroSesion}',
                                     style:
@@ -1382,46 +1383,46 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      // Montos Principales
-                      Expanded(
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Montos Principales',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium),
-                                const SizedBox(height: 16),
-                                TextField(
-                                  controller: _efectivoController,
-                                  decoration: const InputDecoration(
-                                      labelText: 'Efectivo',
-                                      prefixText: '\$',
-                                      border: OutlineInputBorder()),
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [PesoInputFormatter()],
-                                ),
-                                const SizedBox(height: 16),
-                                TextField(
-                                  controller: _tarjetasController,
-                                  decoration: const InputDecoration(
-                                      labelText: 'Tarjetas',
-                                      prefixText: '\$',
-                                      border: OutlineInputBorder()),
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [PesoInputFormatter()],
-                                ),
-                              ],
+                        const SizedBox(width: 16),
+                        // Montos Principales
+                        Expanded(
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Montos Principales',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: _efectivoController,
+                                    decoration: const InputDecoration(
+                                        labelText: 'Efectivo',
+                                        prefixText: '\$',
+                                        border: OutlineInputBorder()),
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [PesoInputFormatter()],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: _tarjetasController,
+                                    decoration: const InputDecoration(
+                                        labelText: 'Tarjetas',
+                                        prefixText: '\$',
+                                        border: OutlineInputBorder()),
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [PesoInputFormatter()],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
 
