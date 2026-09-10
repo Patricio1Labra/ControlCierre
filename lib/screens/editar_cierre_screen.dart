@@ -480,8 +480,18 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
     final resultado = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-            'Editar $tipoNombre${mov.numero != null ? "\n#${mov.numero}" : ""}'),
+        title: Builder(builder: (context) {
+          String? displayNumero;
+          if (mov.tipo == 'transferencia') {
+            displayNumero = mov.rut;
+          } else if (mov.tipo == 'don_jose') {
+            displayNumero = mov.numero;
+          } else if (mov.numero != null && mov.numero!.isNotEmpty) {
+            displayNumero = mov.numero;
+          }
+          return Text(
+              'Editar $tipoNombre${displayNumero != null && displayNumero.isNotEmpty ? "\n$displayNumero" : ""}');
+        }),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -954,6 +964,14 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                 inputFormatters: [RutInputFormatter()],
               ),
             ],
+            if (tipo == 'otros_entrada' || tipo == 'otros_salida')
+              TextField(
+                controller: numeroController,
+                decoration: const InputDecoration(labelText: 'Motivo'),
+                textCapitalization: TextCapitalization.sentences,
+              ),
+            if (tipo == 'otros_entrada' || tipo == 'otros_salida')
+              const SizedBox(height: 16),
             const SizedBox(height: 16),
             TextField(
               controller: montoController,
