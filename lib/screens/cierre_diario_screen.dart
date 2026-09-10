@@ -191,7 +191,9 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
   }
 
   double _monto(String texto) {
-    return double.tryParse(texto.replaceAll('.', '').replaceAll(',', '').trim()) ?? 0;
+    return double.tryParse(
+            texto.replaceAll('.', '').replaceAll(',', '').trim()) ??
+        0;
   }
 
   bool _validarRut(String rut) {
@@ -527,7 +529,6 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -617,7 +618,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
   }
 
   Widget _buildPanelFormularios() {
-    return FocusTraversalGroup(child: SingleChildScrollView(
+    return FocusTraversalGroup(
+        child: SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -718,10 +720,10 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                     const SizedBox(height: 8),
                     TextField(
                       controller: montoContadoController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Monto Contado',
                         isDense: true,
-                        border: const OutlineInputBorder(),
+                        border: OutlineInputBorder(),
                         prefixText: '\$ ',
                       ),
                       keyboardType: TextInputType.number,
@@ -731,10 +733,10 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                     const SizedBox(height: 8),
                     TextField(
                       controller: montoCreditoController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Monto Crédito',
                         isDense: true,
-                        border: const OutlineInputBorder(),
+                        border: OutlineInputBorder(),
                         prefixText: '\$ ',
                       ),
                       keyboardType: TextInputType.number,
@@ -807,9 +809,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                       child: ElevatedButton(
                         onPressed: () async {
                           if (numeroController.text.isNotEmpty &&
-                                   (montoContadoController.text.isNotEmpty ||
-                               montoCreditoController.text.isNotEmpty)) {
-
+                              (montoContadoController.text.isNotEmpty ||
+                                  montoCreditoController.text.isNotEmpty)) {
                             final numeroExiste = _facturas
                                 .any((f) => f.numero == numeroController.text);
 
@@ -826,8 +827,10 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                               return;
                             }
 
-                            final montoContado = _monto(montoContadoController.text);
-                            final montoCredito = _monto(montoCreditoController.text);
+                            final montoContado =
+                                _monto(montoContadoController.text);
+                            final montoCredito =
+                                _monto(montoCreditoController.text);
                             final factura = Factura(
                               cierreId: _cierreActual!.id!,
                               numero: numeroController.text,
@@ -2030,63 +2033,63 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
           padding: const EdgeInsets.all(12),
           child: SingleChildScrollView(
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                titulo,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              const Divider(),
-              if (items.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text('No hay registros',
-                      style: TextStyle(color: Colors.grey, fontSize: 12)),
-                )
-              else
-                ...items.map((item) => ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text('N° ${item.numero}',
-                          style: const TextStyle(fontSize: 13)),
-                      subtitle: Text(_dateFormat.format(item.fecha),
-                          style: const TextStyle(fontSize: 11)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                              _formatCurrency(esContado
-                                  ? item.montoContado
-                                  : item.montoCredito),
-                              style: const TextStyle(fontSize: 12)),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 18),
-                            onPressed: () => _editarFactura(item),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Editar',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, size: 18),
-                            onPressed: () => _eliminarFactura(item.id!),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Eliminar',
-                          ),
-                        ],
-                      ),
-                    )),
-              const Divider(),
-              Text(
-                'Total: ${_formatCurrency(total)}',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-            ],
-          ),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  titulo,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const Divider(),
+                if (items.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text('No hay registros',
+                        style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  )
+                else
+                  ...items.map((item) => ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('N° ${item.numero}',
+                            style: const TextStyle(fontSize: 13)),
+                        subtitle: Text(_dateFormat.format(item.fecha),
+                            style: const TextStyle(fontSize: 11)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                                _formatCurrency(esContado
+                                    ? item.montoContado
+                                    : item.montoCredito),
+                                style: const TextStyle(fontSize: 12)),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 18),
+                              onPressed: () => _editarFactura(item),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Editar',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, size: 18),
+                              onPressed: () => _eliminarFactura(item.id!),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Eliminar',
+                            ),
+                          ],
+                        ),
+                      )),
+                const Divider(),
+                Text(
+                  'Total: ${_formatCurrency(total)}',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -2103,60 +2106,60 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
           padding: const EdgeInsets.all(12),
           child: SingleChildScrollView(
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                titulo,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              const Divider(),
-              if (items.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text('No hay registros',
-                      style: TextStyle(color: Colors.grey, fontSize: 12)),
-                )
-              else
-                ...items.map((item) => ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text('RUT: ${item.rut}',
-                          style: const TextStyle(fontSize: 13)),
-                      subtitle: Text(_dateFormat.format(item.fecha),
-                          style: const TextStyle(fontSize: 11)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_formatCurrency(item.monto),
-                              style: const TextStyle(fontSize: 12)),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 18),
-                            onPressed: () => _editarBoleta(item),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Editar',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, size: 18),
-                            onPressed: () => _eliminarBoleta(item.id!),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Eliminar',
-                          ),
-                        ],
-                      ),
-                    )),
-              const Divider(),
-              Text(
-                'Total: ${_formatCurrency(total)}',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-            ],
-          ),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  titulo,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const Divider(),
+                if (items.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text('No hay registros',
+                        style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  )
+                else
+                  ...items.map((item) => ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('RUT: ${item.rut}',
+                            style: const TextStyle(fontSize: 13)),
+                        subtitle: Text(_dateFormat.format(item.fecha),
+                            style: const TextStyle(fontSize: 11)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(_formatCurrency(item.monto),
+                                style: const TextStyle(fontSize: 12)),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 18),
+                              onPressed: () => _editarBoleta(item),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Editar',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, size: 18),
+                              onPressed: () => _eliminarBoleta(item.id!),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Eliminar',
+                            ),
+                          ],
+                        ),
+                      )),
+                const Divider(),
+                Text(
+                  'Total: ${_formatCurrency(total)}',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -2173,60 +2176,60 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
           padding: const EdgeInsets.all(12),
           child: SingleChildScrollView(
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                titulo,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              const Divider(),
-              if (items.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text('No hay registros',
-                      style: TextStyle(color: Colors.grey, fontSize: 12)),
-                )
-              else
-                ...items.map((item) => ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text('RUT: ${item.rut}',
-                          style: const TextStyle(fontSize: 13)),
-                      subtitle: Text(_dateFormat.format(item.fecha),
-                          style: const TextStyle(fontSize: 11)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_formatCurrency(item.monto),
-                              style: const TextStyle(fontSize: 12)),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 18),
-                            onPressed: () => _editarPago(item),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Editar',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, size: 18),
-                            onPressed: () => _eliminarPago(item.id!),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Eliminar',
-                          ),
-                        ],
-                      ),
-                    )),
-              const Divider(),
-              Text(
-                'Total: ${_formatCurrency(total)}',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-            ],
-          ),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  titulo,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const Divider(),
+                if (items.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text('No hay registros',
+                        style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  )
+                else
+                  ...items.map((item) => ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('RUT: ${item.rut}',
+                            style: const TextStyle(fontSize: 13)),
+                        subtitle: Text(_dateFormat.format(item.fecha),
+                            style: const TextStyle(fontSize: 11)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(_formatCurrency(item.monto),
+                                style: const TextStyle(fontSize: 12)),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 18),
+                              onPressed: () => _editarPago(item),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Editar',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, size: 18),
+                              onPressed: () => _eliminarPago(item.id!),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Eliminar',
+                            ),
+                          ],
+                        ),
+                      )),
+                const Divider(),
+                Text(
+                  'Total: ${_formatCurrency(total)}',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -2243,64 +2246,64 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
           padding: const EdgeInsets.all(12),
           child: SingleChildScrollView(
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                titulo,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              const Divider(),
-              if (items.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text('No hay registros',
-                      style: TextStyle(color: Colors.grey, fontSize: 12)),
-                )
-              else
-                ...items.map((item) => ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        item.numero != null
-                            ? 'N° ${item.numero}'
-                            : item.rut ?? 'Sin info',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      subtitle: Text(_dateFormat.format(item.fecha),
-                          style: const TextStyle(fontSize: 11)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_formatCurrency(item.monto),
-                              style: const TextStyle(fontSize: 12)),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 18),
-                            onPressed: () => _editarMovimiento(item),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Editar',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, size: 18),
-                            onPressed: () => _eliminarMovimiento(item.id!),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Eliminar',
-                          ),
-                        ],
-                      ),
-                    )),
-              const Divider(),
-              Text(
-                'Total: ${_formatCurrency(total)}',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-            ],
-          ),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  titulo,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const Divider(),
+                if (items.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text('No hay registros',
+                        style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  )
+                else
+                  ...items.map((item) => ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          item.numero != null
+                              ? 'N° ${item.numero}'
+                              : item.rut ?? 'Sin info',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        subtitle: Text(_dateFormat.format(item.fecha),
+                            style: const TextStyle(fontSize: 11)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(_formatCurrency(item.monto),
+                                style: const TextStyle(fontSize: 12)),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 18),
+                              onPressed: () => _editarMovimiento(item),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Editar',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, size: 18),
+                              onPressed: () => _eliminarMovimiento(item.id!),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Eliminar',
+                            ),
+                          ],
+                        ),
+                      )),
+                const Divider(),
+                Text(
+                  'Total: ${_formatCurrency(total)}',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -2324,136 +2327,136 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
           padding: const EdgeInsets.all(12),
           child: SingleChildScrollView(
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                titulo,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-
-              const Divider(),
-
-              // Boletas
-
-              if (boletas.isNotEmpty) ...[
-                const Text(
-                  'Boletas',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: Colors.blue),
-                ),
-                ...boletas.map((item) => ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        item.numero != null && item.numero!.contains(' ')
-                            ? item.numero!
-                            : _dateFormat.format(item.fecha),
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      subtitle:
-                          item.numero != null && item.numero!.contains(' ')
-                              ? Text(_dateFormat.format(item.fecha),
-                                  style: const TextStyle(fontSize: 11))
-                              : null,
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_formatCurrency(item.monto),
-                              style: const TextStyle(fontSize: 12)),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 18),
-                            onPressed: () => _editarMovimiento(item),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Editar',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, size: 18),
-                            onPressed: () => _eliminarMovimiento(item.id!),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Eliminar',
-                          ),
-                        ],
-                      ),
-                    )),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Text(
-                  'Subtotal Boletas: ${_formatCurrency(totalBoletas)}',
+                  titulo,
                   style: const TextStyle(
-                      fontSize: 11, fontStyle: FontStyle.italic),
+                      fontWeight: FontWeight.bold, fontSize: 14),
                 ),
-                const SizedBox(height: 8),
-              ],
 
-              // Facturas
+                const Divider(),
 
-              if (facturas.isNotEmpty) ...[
-                const Text(
-                  'Facturas',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: Colors.green),
-                ),
-                ...facturas.map((item) => ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        item.numero != null && item.numero!.contains(' ')
-                            ? item.numero!
-                            : _dateFormat.format(item.fecha),
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      subtitle:
+                // Boletas
+
+                if (boletas.isNotEmpty) ...[
+                  const Text(
+                    'Boletas',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Colors.blue),
+                  ),
+                  ...boletas.map((item) => ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
                           item.numero != null && item.numero!.contains(' ')
-                              ? Text(_dateFormat.format(item.fecha),
-                                  style: const TextStyle(fontSize: 11))
-                              : null,
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_formatCurrency(item.monto),
-                              style: const TextStyle(fontSize: 12)),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 18),
-                            onPressed: () => _editarMovimiento(item),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Editar',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, size: 18),
-                            onPressed: () => _eliminarMovimiento(item.id!),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Eliminar',
-                          ),
-                        ],
-                      ),
-                    )),
+                              ? item.numero!
+                              : _dateFormat.format(item.fecha),
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        subtitle:
+                            item.numero != null && item.numero!.contains(' ')
+                                ? Text(_dateFormat.format(item.fecha),
+                                    style: const TextStyle(fontSize: 11))
+                                : null,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(_formatCurrency(item.monto),
+                                style: const TextStyle(fontSize: 12)),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 18),
+                              onPressed: () => _editarMovimiento(item),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Editar',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, size: 18),
+                              onPressed: () => _eliminarMovimiento(item.id!),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Eliminar',
+                            ),
+                          ],
+                        ),
+                      )),
+                  Text(
+                    'Subtotal Boletas: ${_formatCurrency(totalBoletas)}',
+                    style: const TextStyle(
+                        fontSize: 11, fontStyle: FontStyle.italic),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                // Facturas
+
+                if (facturas.isNotEmpty) ...[
+                  const Text(
+                    'Facturas',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Colors.green),
+                  ),
+                  ...facturas.map((item) => ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          item.numero != null && item.numero!.contains(' ')
+                              ? item.numero!
+                              : _dateFormat.format(item.fecha),
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        subtitle:
+                            item.numero != null && item.numero!.contains(' ')
+                                ? Text(_dateFormat.format(item.fecha),
+                                    style: const TextStyle(fontSize: 11))
+                                : null,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(_formatCurrency(item.monto),
+                                style: const TextStyle(fontSize: 12)),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 18),
+                              onPressed: () => _editarMovimiento(item),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Editar',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, size: 18),
+                              onPressed: () => _eliminarMovimiento(item.id!),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Eliminar',
+                            ),
+                          ],
+                        ),
+                      )),
+                  Text(
+                    'Subtotal Facturas: ${_formatCurrency(totalFacturas)}',
+                    style: const TextStyle(
+                        fontSize: 11, fontStyle: FontStyle.italic),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                const Divider(),
+
                 Text(
-                  'Subtotal Facturas: ${_formatCurrency(totalFacturas)}',
+                  'Total: ${_formatCurrency(totalGeneral)}',
                   style: const TextStyle(
-                      fontSize: 11, fontStyle: FontStyle.italic),
+                      fontWeight: FontWeight.bold, fontSize: 13),
                 ),
-                const SizedBox(height: 8),
               ],
-
-              const Divider(),
-
-              Text(
-                'Total: ${_formatCurrency(totalGeneral)}',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-            ],
-          ),
+            ),
           ),
         ),
       ),
@@ -2480,124 +2483,124 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
           padding: const EdgeInsets.all(12),
           child: SingleChildScrollView(
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                titulo,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-
-              const Divider(),
-
-              // Entradas
-
-              if (otrosEntrada.isNotEmpty) ...[
-                const Text(
-                  'Entradas',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: Colors.green),
-                ),
-                ...otrosEntrada.map((item) => ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(item.numero ?? 'Sin motivo',
-                          style: const TextStyle(fontSize: 13)),
-                      subtitle: Text(_dateFormat.format(item.fecha),
-                          style: const TextStyle(fontSize: 11)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_formatCurrency(item.monto),
-                              style: const TextStyle(
-                                  fontSize: 12, color: Colors.green)),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 18),
-                            onPressed: () => _editarMovimiento(item),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Editar',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, size: 18),
-                            onPressed: () => _eliminarMovimiento(item.id!),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Eliminar',
-                          ),
-                        ],
-                      ),
-                    )),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Text(
-                  'Subtotal Entradas: ${_formatCurrency(totalEntrada)}',
+                  titulo,
                   style: const TextStyle(
-                      fontSize: 11, fontStyle: FontStyle.italic),
+                      fontWeight: FontWeight.bold, fontSize: 14),
                 ),
-                const SizedBox(height: 8),
-              ],
 
-              // Salidas
+                const Divider(),
 
-              if (otrosSalida.isNotEmpty) ...[
-                const Text(
-                  'Salidas',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: Colors.red),
-                ),
-                ...otrosSalida.map((item) => ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(item.numero ?? 'Sin motivo',
-                          style: const TextStyle(fontSize: 13)),
-                      subtitle: Text(_dateFormat.format(item.fecha),
-                          style: const TextStyle(fontSize: 11)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_formatCurrency(item.monto),
-                              style: const TextStyle(
-                                  fontSize: 12, color: Colors.red)),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 18),
-                            onPressed: () => _editarMovimiento(item),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Editar',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, size: 18),
-                            onPressed: () => _eliminarMovimiento(item.id!),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Eliminar',
-                          ),
-                        ],
-                      ),
-                    )),
+                // Entradas
+
+                if (otrosEntrada.isNotEmpty) ...[
+                  const Text(
+                    'Entradas',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Colors.green),
+                  ),
+                  ...otrosEntrada.map((item) => ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(item.numero ?? 'Sin motivo',
+                            style: const TextStyle(fontSize: 13)),
+                        subtitle: Text(_dateFormat.format(item.fecha),
+                            style: const TextStyle(fontSize: 11)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(_formatCurrency(item.monto),
+                                style: const TextStyle(
+                                    fontSize: 12, color: Colors.green)),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 18),
+                              onPressed: () => _editarMovimiento(item),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Editar',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, size: 18),
+                              onPressed: () => _eliminarMovimiento(item.id!),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Eliminar',
+                            ),
+                          ],
+                        ),
+                      )),
+                  Text(
+                    'Subtotal Entradas: ${_formatCurrency(totalEntrada)}',
+                    style: const TextStyle(
+                        fontSize: 11, fontStyle: FontStyle.italic),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                // Salidas
+
+                if (otrosSalida.isNotEmpty) ...[
+                  const Text(
+                    'Salidas',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Colors.red),
+                  ),
+                  ...otrosSalida.map((item) => ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(item.numero ?? 'Sin motivo',
+                            style: const TextStyle(fontSize: 13)),
+                        subtitle: Text(_dateFormat.format(item.fecha),
+                            style: const TextStyle(fontSize: 11)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(_formatCurrency(item.monto),
+                                style: const TextStyle(
+                                    fontSize: 12, color: Colors.red)),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 18),
+                              onPressed: () => _editarMovimiento(item),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Editar',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, size: 18),
+                              onPressed: () => _eliminarMovimiento(item.id!),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              tooltip: 'Eliminar',
+                            ),
+                          ],
+                        ),
+                      )),
+                  Text(
+                    'Subtotal Salidas: ${_formatCurrency(totalSalida)}',
+                    style: const TextStyle(
+                        fontSize: 11, fontStyle: FontStyle.italic),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                const Divider(),
+
                 Text(
-                  'Subtotal Salidas: ${_formatCurrency(totalSalida)}',
+                  'Total: ${_formatCurrency(totalGeneral)}',
                   style: const TextStyle(
-                      fontSize: 11, fontStyle: FontStyle.italic),
+                      fontWeight: FontWeight.bold, fontSize: 13),
                 ),
-                const SizedBox(height: 8),
               ],
-
-              const Divider(),
-
-              Text(
-                'Total: ${_formatCurrency(totalGeneral)}',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-            ],
-          ),
+            ),
           ),
         ),
       ),
@@ -2633,9 +2636,9 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: montoContadoController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Monto Contado',
-                    border: const OutlineInputBorder(),
+                    border: OutlineInputBorder(),
                     prefixText: '\$ ',
                   ),
                   keyboardType: TextInputType.number,
@@ -2644,9 +2647,9 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: montoCreditoController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Monto Crédito',
-                    border: const OutlineInputBorder(),
+                    border: OutlineInputBorder(),
                     prefixText: '\$ ',
                   ),
                   keyboardType: TextInputType.number,
@@ -2684,10 +2687,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                       }
                     }
 
-                    final montoContado =
-                        _monto(montoContadoController.text);
-                    final montoCredito =
-                        _monto(montoCreditoController.text);
+                    final montoContado = _monto(montoContadoController.text);
+                    final montoCredito = _monto(montoCreditoController.text);
 
                     final facturaActualizada = Factura(
                       id: factura.id,
@@ -3703,8 +3704,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
             final tarjetasPOS = _monto(tarjetasController.text);
 
-            final tarjetaPago =
-                _monto(tarjetaPagoController.text);
+            final tarjetaPago = _monto(tarjetaPagoController.text);
 
             final efectivo = _monto(efectivoController.text);
 
@@ -3712,8 +3712,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
               // Imprimir con diálogo (layoutPdf)
 
               try {
-                await logger.info('UI',
-                    '========== INICIO IMPRESIÓN CON DIÁLOGO ==========');
+                await logger.info(
+                    'UI', '========== INICIO IMPRESIÓN CON DIÁLOGO ==========');
 
                 await logger.info('UI',
                     'Sesión: ${_cierreActual!.numeroSesion}, Cajero: $nombreCajero, Caja: $_nombreCaja');
@@ -3865,53 +3865,71 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 await logger.info(
                     'UI', 'Correcciones cargadas: ${correcciones.length}');
 
-                // Obtener impresora por defecto si hay una guardada
-
-                Printer? impresora;
-
-                if (_printerName.isNotEmpty) {
-                  try {
-                    await logger.info(
-                        'UI', 'Listando impresoras disponibles...');
-
-                    final impresoras = await Printing.listPrinters();
-
-                    await logger.info(
-                        'UI', 'Impresoras encontradas: ${impresoras.length}');
-
-                    for (final p in impresoras) {
-                      await logger.debug('UI',
-                          '  - ${p.name} (${p.isDefault ? "por defecto" : "no predeterminada"})');
-                    }
-
-                    if (impresoras.isNotEmpty) {
-                      impresora = impresoras.firstWhere(
-                        (p) => p.name == _printerName,
-                        orElse: () => impresoras.first,
-                      );
-
-                      await logger.info(
-                          'UI', 'Impresora seleccionada: ${impresora.name}');
-                    } else {
-                      await logger.warning(
-                          'UI', 'No se encontraron impresoras disponibles');
-                    }
-                  } catch (e, stackTrace) {
-                    await logger.error('UI', 'Error al listar impresoras',
-                        error: e, stackTrace: stackTrace);
-
-                    impresora = null;
-                  }
-                } else {
-                  await logger.warning(
-                      'UI', 'No hay nombre de impresora guardado');
-                }
-
                 // Cargar configuración de impresión
-
                 final configuracion = await _db.getConfiguracionImpresion();
 
                 await logger.info('UI', 'Configuración de impresión cargada');
+                await logger.info('UI',
+                    'Modo impresora: ${configuracion.usarImpresoraPorDefecto ? "Por defecto" : "Específica: ${configuracion.impresoraNombre ?? "No configurada"}"}');
+
+                // Obtener impresora según configuración
+                Printer? impresora;
+
+                try {
+                  await logger.info('UI', 'Listando impresoras disponibles...');
+
+                  final impresoras = await Printing.listPrinters();
+
+                  await logger.info(
+                      'UI', 'Impresoras encontradas: ${impresoras.length}');
+
+                  for (final p in impresoras) {
+                    await logger.debug('UI',
+                        '  - ${p.name} (${p.isDefault ? "por defecto" : "no predeterminada"})');
+                  }
+
+                  if (impresoras.isEmpty) {
+                    await logger.warning(
+                        'UI', 'No se encontraron impresoras disponibles');
+                  } else {
+                    if (configuracion.usarImpresoraPorDefecto) {
+                      // Usar impresora por defecto del sistema
+                      impresora = impresoras.firstWhere(
+                        (p) => p.isDefault,
+                        orElse: () => impresoras.first,
+                      );
+                      await logger.info('UI',
+                          'Usando impresora por defecto: ${impresora.name}');
+                    } else {
+                      // Usar impresora específica configurada
+                      final nombreBuscado = configuracion.impresoraNombre;
+                      if (nombreBuscado != null && nombreBuscado.isNotEmpty) {
+                        try {
+                          impresora = impresoras.firstWhere(
+                            (p) => p.name == nombreBuscado,
+                          );
+                          await logger.info('UI',
+                              'Impresora específica encontrada: ${impresora.name}');
+                        } catch (e) {
+                          // Si no se encuentra la impresora configurada, usar la primera disponible
+                          impresora = impresoras.first;
+                          await logger.warning('UI',
+                              'Impresora "$nombreBuscado" no encontrada, usando: ${impresora.name}');
+                        }
+                      } else {
+                        // Si no hay nombre configurado, usar la primera disponible
+                        impresora = impresoras.first;
+                        await logger.warning('UI',
+                            'No hay impresora configurada, usando: ${impresora.name}');
+                      }
+                    }
+                  }
+                } catch (e, stackTrace) {
+                  await logger.error('UI', 'Error al listar impresoras',
+                      error: e, stackTrace: stackTrace);
+
+                  impresora = null;
+                }
 
                 // Generar todos los documentos usando la función unificada
 

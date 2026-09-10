@@ -1,6 +1,7 @@
 class ConfiguracionImpresion {
   final int? id;
   final String? impresoraNombre;
+  final bool usarImpresoraPorDefecto;
   final bool imprimirFacturasContado;
   final bool imprimirFacturasCredito;
   final bool imprimirFacturasMixtas;
@@ -11,6 +12,7 @@ class ConfiguracionImpresion {
   ConfiguracionImpresion({
     this.id,
     this.impresoraNombre,
+    this.usarImpresoraPorDefecto = true,
     this.imprimirFacturasContado = true,
     this.imprimirFacturasCredito = true,
     this.imprimirFacturasMixtas = true,
@@ -23,6 +25,7 @@ class ConfiguracionImpresion {
     return {
       'id': id,
       'impresora_nombre': impresoraNombre,
+      'usar_impresora_por_defecto': usarImpresoraPorDefecto ? 1 : 0,
       'imprimir_facturas_contado': imprimirFacturasContado ? 1 : 0,
       'imprimir_facturas_credito': imprimirFacturasCredito ? 1 : 0,
       'imprimir_facturas_mixtas': imprimirFacturasMixtas ? 1 : 0,
@@ -36,6 +39,8 @@ class ConfiguracionImpresion {
     return ConfiguracionImpresion(
       id: map['id'] as int?,
       impresoraNombre: map['impresora_nombre'] as String?,
+      usarImpresoraPorDefecto:
+          ((map['usar_impresora_por_defecto'] as int?) ?? 1) == 1,
       imprimirFacturasContado: (map['imprimir_facturas_contado'] as int) == 1,
       imprimirFacturasCredito: (map['imprimir_facturas_credito'] as int) == 1,
       imprimirFacturasMixtas:
@@ -49,6 +54,7 @@ class ConfiguracionImpresion {
   ConfiguracionImpresion copyWith({
     int? id,
     String? impresoraNombre,
+    bool? usarImpresoraPorDefecto,
     bool? imprimirFacturasContado,
     bool? imprimirFacturasCredito,
     bool? imprimirFacturasMixtas,
@@ -59,6 +65,8 @@ class ConfiguracionImpresion {
     return ConfiguracionImpresion(
       id: id ?? this.id,
       impresoraNombre: impresoraNombre ?? this.impresoraNombre,
+      usarImpresoraPorDefecto:
+          usarImpresoraPorDefecto ?? this.usarImpresoraPorDefecto,
       imprimirFacturasContado:
           imprimirFacturasContado ?? this.imprimirFacturasContado,
       imprimirFacturasCredito:

@@ -49,7 +49,8 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
           if (_fechaInicio != null && cierre.fecha.isBefore(_fechaInicio!)) {
             return false;
           }
-          if (_fechaFin != null && cierre.fecha.isAfter(_fechaFin!.add(const Duration(days: 1)))) {
+          if (_fechaFin != null &&
+              cierre.fecha.isAfter(_fechaFin!.add(const Duration(days: 1)))) {
             return false;
           }
           return true;
@@ -73,7 +74,9 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
   Future<void> _seleccionarFecha(BuildContext context, bool esInicio) async {
     final fecha = await showDatePicker(
       context: context,
-      initialDate: esInicio ? (_fechaInicio ?? DateTime.now()) : (_fechaFin ?? DateTime.now()),
+      initialDate: esInicio
+          ? (_fechaInicio ?? DateTime.now())
+          : (_fechaFin ?? DateTime.now()),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       locale: const Locale('es', 'CL'),
@@ -160,12 +163,18 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
       final facturas = await _db.getFacturasByCierre(cierre.id!);
       final boletasCredito = await _db.getBoletasCreditoByCierre(cierre.id!);
       final pagos = await _db.getPagosByCierre(cierre.id!);
-      final transferencias = await _db.getMovimientosByCierre(cierre.id!, tipo: 'transferencia');
-      final cheques = await _db.getMovimientosByCierre(cierre.id!, tipo: 'cheque');
-      final depositos = await _db.getMovimientosByCierre(cierre.id!, tipo: 'deposito');
-      final notasCredito = await _db.getMovimientosByCierre(cierre.id!, tipo: 'nota_credito');
-      final otrosEntrada = await _db.getMovimientosByCierre(cierre.id!, tipo: 'otros_entrada');
-      final otrosSalida = await _db.getMovimientosByCierre(cierre.id!, tipo: 'otros_salida');
+      final transferencias =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'transferencia');
+      final cheques =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'cheque');
+      final depositos =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'deposito');
+      final notasCredito =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'nota_credito');
+      final otrosEntrada =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'otros_entrada');
+      final otrosSalida =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'otros_salida');
       final donJose = await _db.getDonJoseByCierre(cierre.id!);
       final tarjetas = await _db.getTarjetasByCierre(cierre.id!);
 
@@ -218,7 +227,8 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
       if (!mounted) return;
       for (int i = 0; i < documentos.length; i++) {
         final doc = documentos[i];
-        String nombreDoc = 'Cierre_${cierre.numeroSesion}_Doc${i + 1}_${DateFormat('ddMMyyyy').format(cierre.fecha)}.pdf';
+        String nombreDoc =
+            'Cierre_${cierre.numeroSesion}_Doc${i + 1}_${DateFormat('ddMMyyyy').format(cierre.fecha)}.pdf';
 
         await Printing.layoutPdf(
           onLayout: (format) async => doc.save(),
@@ -245,12 +255,18 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
       final facturas = await _db.getFacturasByCierre(cierre.id!);
       final boletasCredito = await _db.getBoletasCreditoByCierre(cierre.id!);
       final pagos = await _db.getPagosByCierre(cierre.id!);
-      final transferencias = await _db.getMovimientosByCierre(cierre.id!, tipo: 'transferencia');
-      final cheques = await _db.getMovimientosByCierre(cierre.id!, tipo: 'cheque');
-      final depositos = await _db.getMovimientosByCierre(cierre.id!, tipo: 'deposito');
-      final notasCredito = await _db.getMovimientosByCierre(cierre.id!, tipo: 'nota_credito');
-      final otrosEntrada = await _db.getMovimientosByCierre(cierre.id!, tipo: 'otros_entrada');
-      final otrosSalida = await _db.getMovimientosByCierre(cierre.id!, tipo: 'otros_salida');
+      final transferencias =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'transferencia');
+      final cheques =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'cheque');
+      final depositos =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'deposito');
+      final notasCredito =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'nota_credito');
+      final otrosEntrada =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'otros_entrada');
+      final otrosSalida =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'otros_salida');
       final donJose = await _db.getDonJoseByCierre(cierre.id!);
       final tarjetas = await _db.getTarjetasByCierre(cierre.id!);
 
@@ -258,7 +274,6 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
       final rutaLocal = await PreferencesService.getRutaLocal();
       final rutaServidor = await PreferencesService.getRutaServidor();
       final nombreCaja = await PreferencesService.getNombreCaja();
-      final printerName = await PreferencesService.getPrinterName();
 
       // Combinar otros entrada y salida
       final otros = [...otrosEntrada, ...otrosSalida];
@@ -282,20 +297,49 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
         tarjetas,
       );
 
-      // Obtener impresora
+      // Cargar configuración de impresión
+      final configuracion = await _db.getConfiguracionImpresion();
+
+      // Obtener impresora según configuración
       Printer? impresora;
-      if (printerName.isNotEmpty) {
-        try {
-          final impresoras = await Printing.listPrinters();
-          if (impresoras.isNotEmpty) {
-            impresora = impresoras.firstWhere(
-              (p) => p.name == printerName,
-              orElse: () => impresoras.first,
-            );
-          }
-        } catch (e) {
-          impresora = null;
+      try {
+        final impresoras = await Printing.listPrinters();
+        if (impresoras.isEmpty) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No se encontraron impresoras disponibles'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
         }
+
+        if (configuracion.usarImpresoraPorDefecto) {
+          // Usar impresora por defecto del sistema
+          impresora = impresoras.firstWhere(
+            (p) => p.isDefault,
+            orElse: () => impresoras.first,
+          );
+        } else {
+          // Usar impresora específica configurada
+          final nombreBuscado = configuracion.impresoraNombre;
+          if (nombreBuscado != null && nombreBuscado.isNotEmpty) {
+            try {
+              impresora = impresoras.firstWhere(
+                (p) => p.name == nombreBuscado,
+              );
+            } catch (e) {
+              // Si no se encuentra la impresora configurada, usar la primera disponible
+              impresora = impresoras.first;
+            }
+          } else {
+            // Si no hay nombre configurado, usar la primera disponible
+            impresora = impresoras.first;
+          }
+        }
+      } catch (e) {
+        impresora = null;
       }
 
       // Generar todos los documentos usando la función unificada
@@ -331,12 +375,15 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
 
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Impresión enviada y PDF guardado exitosamente')),
+          SnackBar(
+              content: Text('Impreso en ${impresora.name} y PDF guardado')),
         );
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No hay impresora configurada. PDF guardado exitosamente.')),
+          const SnackBar(
+              content: Text(
+                  'No hay impresora configurada. PDF guardado exitosamente.')),
         );
       }
     } catch (e) {
@@ -354,12 +401,18 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
       final facturas = await _db.getFacturasByCierre(cierre.id!);
       final boletasCredito = await _db.getBoletasCreditoByCierre(cierre.id!);
       final pagos = await _db.getPagosByCierre(cierre.id!);
-      final transferencias = await _db.getMovimientosByCierre(cierre.id!, tipo: 'transferencia');
-      final cheques = await _db.getMovimientosByCierre(cierre.id!, tipo: 'cheque');
-      final depositos = await _db.getMovimientosByCierre(cierre.id!, tipo: 'deposito');
-      final notasCredito = await _db.getMovimientosByCierre(cierre.id!, tipo: 'nota_credito');
-      final otrosEntrada = await _db.getMovimientosByCierre(cierre.id!, tipo: 'otros_entrada');
-      final otrosSalida = await _db.getMovimientosByCierre(cierre.id!, tipo: 'otros_salida');
+      final transferencias =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'transferencia');
+      final cheques =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'cheque');
+      final depositos =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'deposito');
+      final notasCredito =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'nota_credito');
+      final otrosEntrada =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'otros_entrada');
+      final otrosSalida =
+          await _db.getMovimientosByCierre(cierre.id!, tipo: 'otros_salida');
       final tarjetas = await _db.getTarjetasByCierre(cierre.id!);
 
       // Cargar configuración
@@ -392,11 +445,15 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
       if (!mounted) return;
       if (rutasGuardadas.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('PDF guardado en ${rutasGuardadas.length} ubicación(es)')),
+          SnackBar(
+              content: Text(
+                  'PDF guardado en ${rutasGuardadas.length} ubicación(es)')),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error: No hay rutas configuradas para guardar el PDF')),
+          const SnackBar(
+              content:
+                  Text('Error: No hay rutas configuradas para guardar el PDF')),
         );
       }
     } catch (e) {
@@ -416,7 +473,9 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
           IconButton(
             icon: const Icon(Icons.filter_list_off),
             tooltip: 'Limpiar filtros',
-            onPressed: _fechaInicio != null || _fechaFin != null ? _limpiarFiltros : null,
+            onPressed: _fechaInicio != null || _fechaFin != null
+                ? _limpiarFiltros
+                : null,
           ),
         ],
       ),
@@ -475,7 +534,9 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
                             margin: const EdgeInsets.only(bottom: 12),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: cierre.cerrada ? Colors.green : Colors.orange,
+                                backgroundColor: cierre.cerrada
+                                    ? Colors.green
+                                    : Colors.orange,
                                 child: Text(
                                   cierre.numeroSesion.toString(),
                                   style: const TextStyle(color: Colors.white),
@@ -483,7 +544,8 @@ class _HistorialCierresScreenState extends State<HistorialCierresScreen> {
                               ),
                               title: Text(
                                 _dateFormat.format(cierre.fecha),
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
                               ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,

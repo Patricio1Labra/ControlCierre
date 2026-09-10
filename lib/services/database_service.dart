@@ -29,7 +29,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 10,
+      version: 11,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -159,6 +159,11 @@ class DatabaseService {
       // Agregar opción de imprimir facturas mixtas
       await db.execute(
           'ALTER TABLE configuracion_impresion ADD COLUMN imprimir_facturas_mixtas INTEGER NOT NULL DEFAULT 1');
+    }
+    if (oldVersion < 11) {
+      // Agregar opción de usar impresora por defecto
+      await db.execute(
+          'ALTER TABLE configuracion_impresion ADD COLUMN usar_impresora_por_defecto INTEGER NOT NULL DEFAULT 1');
     }
   }
 
@@ -308,13 +313,20 @@ class DatabaseService {
     ''');
 
     // Índices para acelerar queries por cierre_id
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_facturas_cierre ON facturas(cierre_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_boletas_cierre ON boletas_credito(cierre_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_pagos_cierre ON pagos(cierre_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_movimientos_cierre ON movimientos_simples(cierre_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_movimientos_tipo ON movimientos_simples(cierre_id, tipo)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_correcciones_cierre ON correcciones_cierre(cierre_id)');
-    await db.execute('CREATE INDEX IF NOT EXISTS idx_tarjetas_cierre ON tarjetas(cierre_id)');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_facturas_cierre ON facturas(cierre_id)');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_boletas_cierre ON boletas_credito(cierre_id)');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_pagos_cierre ON pagos(cierre_id)');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_movimientos_cierre ON movimientos_simples(cierre_id)');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_movimientos_tipo ON movimientos_simples(cierre_id, tipo)');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_correcciones_cierre ON correcciones_cierre(cierre_id)');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_tarjetas_cierre ON tarjetas(cierre_id)');
   }
 
   // CRUD para CierreCaja

@@ -296,7 +296,8 @@ class PdfService {
       children: [
         pw.Text(
           titulo,
-          style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+          style:
+              const pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
         ),
         pw.Text(
           'Fecha: ${_dateFormat.format(cierre.fecha)}',
@@ -329,7 +330,8 @@ class PdfService {
         children: [
           pw.Text(
             nombreCaja.isEmpty ? 'RESUMEN' : 'RESUMEN - $nombreCaja',
-            style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            style: const pw.TextStyle(
+                fontSize: 16, fontWeight: pw.FontWeight.bold),
           ),
           pw.Divider(),
           _buildFilaResumen('Total Ingresos:', ingresosTotales, bold: true),
@@ -363,8 +365,8 @@ class PdfService {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text('INGRESOS',
-              style:
-                  pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+              style: const pw.TextStyle(
+                  fontSize: 14, fontWeight: pw.FontWeight.bold)),
           pw.Divider(),
           _buildFilaResumen('Depósitos:', depositos),
           _buildFilaResumen('Boletas Crédito:', boletasCredito),
@@ -385,14 +387,14 @@ class PdfService {
                     children: [
                       pw.Text(
                         o.numero ?? "Sin motivo",
-                        style: pw.TextStyle(
+                        style: const pw.TextStyle(
                             fontSize: 10, fontStyle: pw.FontStyle.italic),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.only(right: 30),
                         child: pw.Text(
                           _formatCurrency(o.monto),
-                          style: pw.TextStyle(
+                          style: const pw.TextStyle(
                               fontSize: 10, fontStyle: pw.FontStyle.italic),
                         ),
                       ),
@@ -421,8 +423,8 @@ class PdfService {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text('SALIDAS',
-              style:
-                  pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+              style: const pw.TextStyle(
+                  fontSize: 14, fontWeight: pw.FontWeight.bold)),
           pw.Divider(),
           _buildFilaResumen('Pagos:', pagos),
           _buildFilaResumen('Total Facturas:', totalFacturas),
@@ -436,14 +438,14 @@ class PdfService {
                     children: [
                       pw.Text(
                         o.numero ?? "Sin motivo",
-                        style: pw.TextStyle(
+                        style: const pw.TextStyle(
                             fontSize: 10, fontStyle: pw.FontStyle.italic),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.only(right: 30),
                         child: pw.Text(
                           _formatCurrency(o.monto),
-                          style: pw.TextStyle(
+                          style: const pw.TextStyle(
                               fontSize: 10, fontStyle: pw.FontStyle.italic),
                         ),
                       ),
@@ -472,7 +474,7 @@ class PdfService {
             children: [
               pw.Text(
                 '⚠ CORRECCIONES REALIZADAS',
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                     fontSize: 14,
                     fontWeight: pw.FontWeight.bold,
                     color: PdfColors.orange900),
@@ -538,12 +540,13 @@ class PdfService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(titulo,
-            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+            style: const pw.TextStyle(
+                fontSize: 14, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 5),
         pw.TableHelper.fromTextArray(
           border: pw.TableBorder.all(),
           headerStyle:
-              pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+              const pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
           cellStyle: const pw.TextStyle(fontSize: 9),
           headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
           cellHeight: 20,
@@ -568,12 +571,13 @@ class PdfService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(titulo,
-            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+            style: const pw.TextStyle(
+                fontSize: 14, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 5),
         pw.TableHelper.fromTextArray(
           border: pw.TableBorder.all(),
           headerStyle:
-              pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+              const pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
           cellStyle: const pw.TextStyle(fontSize: 9),
           headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
           cellHeight: 20,
@@ -597,12 +601,13 @@ class PdfService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(titulo,
-            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+            style: const pw.TextStyle(
+                fontSize: 14, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 5),
         pw.TableHelper.fromTextArray(
           border: pw.TableBorder.all(),
           headerStyle:
-              pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+              const pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
           cellStyle: const pw.TextStyle(fontSize: 9),
           headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
           cellHeight: 20,
@@ -627,12 +632,13 @@ class PdfService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(titulo,
-            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+            style: const pw.TextStyle(
+                fontSize: 14, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 5),
         pw.TableHelper.fromTextArray(
           border: pw.TableBorder.all(),
           headerStyle:
-              pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+              const pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
           cellStyle: const pw.TextStyle(fontSize: 9),
           headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
           cellHeight: 20,
@@ -660,7 +666,8 @@ class PdfService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(titulo,
-            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+            style: const pw.TextStyle(
+                fontSize: 14, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 5),
         pw.Container(
           decoration: pw.BoxDecoration(
@@ -673,7 +680,7 @@ class PdfService {
               // Boletas
               if (boletas.isNotEmpty) ...[
                 pw.Text('BOLETAS',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                         fontSize: 12,
                         fontWeight: pw.FontWeight.bold,
                         color: PdfColors.blue)),
@@ -692,7 +699,7 @@ class PdfService {
                     )),
                 pw.Divider(),
                 pw.Text('Subtotal Boletas: ${_formatCurrency(totalBoletas)}',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                         fontSize: 10, fontStyle: pw.FontStyle.italic)),
                 pw.SizedBox(height: 8),
               ],
@@ -700,7 +707,7 @@ class PdfService {
               // Facturas
               if (facturas.isNotEmpty) ...[
                 pw.Text('FACTURAS',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                         fontSize: 12,
                         fontWeight: pw.FontWeight.bold,
                         color: PdfColors.green)),
@@ -719,14 +726,14 @@ class PdfService {
                     )),
                 pw.Divider(),
                 pw.Text('Subtotal Facturas: ${_formatCurrency(totalFacturas)}',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                         fontSize: 10, fontStyle: pw.FontStyle.italic)),
                 pw.SizedBox(height: 8),
               ],
 
               pw.Divider(thickness: 2),
               pw.Text('TOTAL: ${_formatCurrency(totalGeneral)}',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                       fontSize: 12, fontWeight: pw.FontWeight.bold)),
             ],
           ),

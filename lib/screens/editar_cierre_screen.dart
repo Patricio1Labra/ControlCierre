@@ -940,7 +940,6 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       final rutaLocal = await PreferencesService.getRutaLocal();
       final rutaServidor = await PreferencesService.getRutaServidor();
       final nombreCaja = await PreferencesService.getNombreCaja();
-      final printerName = await PreferencesService.getPrinterName();
 
       // Cargar correcciones y tarjetas
       final correcciones = await _db.getCorreccionesByCierre(widget.cierre.id!);
@@ -968,20 +967,50 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
         tarjetas,
       );
 
-      // Obtener impresora
+      // Cargar configuración de impresión
+      final configuracion = await _db.getConfiguracionImpresion();
+
+      // Obtener impresora según configuración
       Printer? impresora;
-      if (printerName.isNotEmpty) {
-        try {
-          final impresoras = await Printing.listPrinters();
-          if (impresoras.isNotEmpty) {
-            impresora = impresoras.firstWhere(
-              (p) => p.name == printerName,
-              orElse: () => impresoras.first,
+      try {
+        final impresoras = await Printing.listPrinters();
+        if (impresoras.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No se encontraron impresoras disponibles'),
+                backgroundColor: Colors.orange,
+              ),
             );
           }
-        } catch (e) {
-          impresora = null;
+          return;
         }
+
+        if (configuracion.usarImpresoraPorDefecto) {
+          // Usar impresora por defecto del sistema
+          impresora = impresoras.firstWhere(
+            (p) => p.isDefault,
+            orElse: () => impresoras.first,
+          );
+        } else {
+          // Usar impresora específica configurada
+          final nombreBuscado = configuracion.impresoraNombre;
+          if (nombreBuscado != null && nombreBuscado.isNotEmpty) {
+            try {
+              impresora = impresoras.firstWhere(
+                (p) => p.name == nombreBuscado,
+              );
+            } catch (e) {
+              // Si no se encuentra la impresora configurada, usar la primera disponible
+              impresora = impresoras.first;
+            }
+          } else {
+            // Si no hay nombre configurado, usar la primera disponible
+            impresora = impresoras.first;
+          }
+        }
+      } catch (e) {
+        impresora = null;
       }
 
       // Generar todos los documentos usando la función unificada
@@ -1018,8 +1047,9 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Impreso directamente y PDF guardado')),
+            SnackBar(
+              content: Text('Impreso en ${impresora.name} y PDF guardado'),
+            ),
           );
         }
       } else {
@@ -1250,9 +1280,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                                 prefixText: '\$',
                                 border: OutlineInputBorder()),
                             keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              PesoInputFormatter()
-                            ],
+                            inputFormatters: [PesoInputFormatter()],
                           ),
                           const SizedBox(height: 16),
                           TextField(
@@ -1262,9 +1290,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                                 prefixText: '\$',
                                 border: OutlineInputBorder()),
                             keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              PesoInputFormatter()
-                            ],
+                            inputFormatters: [PesoInputFormatter()],
                           ),
                         ],
                       ),

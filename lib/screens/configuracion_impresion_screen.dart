@@ -8,10 +8,12 @@ class ConfiguracionImpresionScreen extends StatefulWidget {
   const ConfiguracionImpresionScreen({super.key});
 
   @override
-  State<ConfiguracionImpresionScreen> createState() => _ConfiguracionImpresionScreenState();
+  State<ConfiguracionImpresionScreen> createState() =>
+      _ConfiguracionImpresionScreenState();
 }
 
-class _ConfiguracionImpresionScreenState extends State<ConfiguracionImpresionScreen> {
+class _ConfiguracionImpresionScreenState
+    extends State<ConfiguracionImpresionScreen> {
   final _db = DatabaseService.instance;
 
   ConfiguracionImpresion? _configuracion;
@@ -38,9 +40,11 @@ class _ConfiguracionImpresionScreenState extends State<ConfiguracionImpresionScr
         _isLoading = false;
       });
 
-      await logger.debug('UI', 'Configuración cargada: Impresora=${config.impresoraNombre ?? "Sin configurar"}');
+      await logger.debug('UI',
+          'Configuración cargada: Impresora=${config.impresoraNombre ?? "Sin configurar"}, UsarPorDefecto=${config.usarImpresoraPorDefecto}');
     } catch (e, stackTrace) {
-      await logger.error('UI', 'Error al cargar configuración de impresión', error: e, stackTrace: stackTrace);
+      await logger.error('UI', 'Error al cargar configuración de impresión',
+          error: e, stackTrace: stackTrace);
       setState(() => _isLoading = false);
 
       if (!mounted) return;
@@ -69,7 +73,8 @@ class _ConfiguracionImpresionScreenState extends State<ConfiguracionImpresionScr
             );
           } catch (e) {
             // Si no se encuentra la impresora configurada, usar la primera disponible
-            _impresoraSeleccionada = impresoras.isNotEmpty ? impresoras.first : null;
+            _impresoraSeleccionada =
+                impresoras.isNotEmpty ? impresoras.first : null;
           }
         } else if (impresoras.isNotEmpty) {
           _impresoraSeleccionada = impresoras.first;
@@ -77,8 +82,13 @@ class _ConfiguracionImpresionScreenState extends State<ConfiguracionImpresionScr
       });
 
       await logger.info('UI', '${impresoras.length} impresoras detectadas');
+      for (final p in impresoras) {
+        await logger.debug('UI',
+            '  - ${p.name} (${p.isDefault ? "por defecto" : "no predeterminada"})');
+      }
     } catch (e, stackTrace) {
-      await logger.error('UI', 'Error al detectar impresoras', error: e, stackTrace: stackTrace);
+      await logger.error('UI', 'Error al detectar impresoras',
+          error: e, stackTrace: stackTrace);
     }
   }
 
@@ -91,7 +101,9 @@ class _ConfiguracionImpresionScreenState extends State<ConfiguracionImpresionScr
       await logger.info('UI', 'Guardando configuración de impresión');
 
       final configActualizada = _configuracion!.copyWith(
-        impresoraNombre: _impresoraSeleccionada?.name,
+        impresoraNombre: _configuracion!.usarImpresoraPorDefecto
+            ? null
+            : _impresoraSeleccionada?.name,
       );
 
       await _db.updateConfiguracionImpresion(configActualizada);
@@ -101,7 +113,10 @@ class _ConfiguracionImpresionScreenState extends State<ConfiguracionImpresionScr
         _isSaving = false;
       });
 
-      await logger.info('UI', 'Configuración de impresión guardada exitosamente');
+      await logger.info(
+          'UI', 'Configuración de impresión guardada exitosamente');
+      await logger.info('UI',
+          'Modo: ${configActualizada.usarImpresoraPorDefecto ? "Impresora por defecto" : "Impresora específica: ${configActualizada.impresoraNombre}"}');
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -112,7 +127,8 @@ class _ConfiguracionImpresionScreenState extends State<ConfiguracionImpresionScr
         ),
       );
     } catch (e, stackTrace) {
-      await logger.error('UI', 'Error al guardar configuración', error: e, stackTrace: stackTrace);
+      await logger.error('UI', 'Error al guardar configuración de impresión',
+          error: e, stackTrace: stackTrace);
       setState(() => _isSaving = false);
 
       if (!mounted) return;
@@ -137,7 +153,8 @@ class _ConfiguracionImpresionScreenState extends State<ConfiguracionImpresionScr
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
                     )
                   : const Icon(Icons.save),
               onPressed: _isSaving ? null : _guardarConfiguracion,
@@ -187,25 +204,91 @@ class _ConfiguracionImpresionScreenState extends State<ConfiguracionImpresionScr
                 'No se detectaron impresoras',
                 style: TextStyle(color: Colors.orange),
               )
-            else
-              DropdownButtonFormField<Printer>(
-                initialValue: _impresoraSeleccionada,
-                decoration: const InputDecoration(
-                  labelText: 'Seleccionar impresora',
-                  border: OutlineInputBorder(),
-                ),
-                items: _impresoras.map((impresora) {
-                  return DropdownMenuItem<Printer>(
-                    value: impresora,
-                    child: Text(impresora.name),
-                  );
-                }).toList(),
-                onChanged: (Printer? nuevaImpresora) {
+            else ...[
+              // Radio buttons para elegir modo
+              RadioGroup<bool>(
+                groupValue: _configuracion!.usarImpresoraPorDefecto,
+                onChanged: (value) {
                   setState(() {
-                    _impresoraSeleccionada = nuevaImpresora;
+                    _configuracion = _configuracion!.copyWith(
+                      usarImpresoraPorDefecto: value ?? true,
+                    );
                   });
                 },
+                child: const Column(
+                  children: [
+                    ListTile(
+                      leading: Radio<bool>(value: true),
+                      title: Text('Usar impresora por defecto del sistema'),
+                      subtitle: Text(
+                        'Recomendado: usa la impresora configurada como predeterminada en Windows',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    ListTile(
+                      leading: Radio<bool>(value: false),
+                      title: Text('Seleccionar impresora específica'),
+                      subtitle: Text(
+                        'Elige una impresora de la lista (útil si tienes múltiples impresoras)',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(height: 16),
+              // Dropdown de impresoras (solo visible si no usa por defecto)
+              if (!_configuracion!.usarImpresoraPorDefecto) ...[
+                DropdownButtonFormField<Printer>(
+                  initialValue: _impresoraSeleccionada,
+                  decoration: const InputDecoration(
+                    labelText: 'Seleccionar impresora',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _impresoras.map((impresora) {
+                    return DropdownMenuItem<Printer>(
+                      value: impresora,
+                      child: Text(impresora.name),
+                    );
+                  }).toList(),
+                  onChanged: (Printer? nuevaImpresora) {
+                    setState(() {
+                      _impresoraSeleccionada = nuevaImpresora;
+                    });
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+              // Info de la impresora por defecto
+              if (_configuracion!.usarImpresoraPorDefecto) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline,
+                          color: Colors.blue.shade700, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Se usará la impresora predeterminada del sistema. Verifica en Windows cuál está configurada.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
             const SizedBox(height: 8),
             TextButton.icon(
               onPressed: _cargarImpresoras,

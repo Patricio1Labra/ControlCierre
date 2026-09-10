@@ -99,7 +99,7 @@ class ThermalPrintService {
             pw.Center(
               child: pw.Text(
                 'CONTROL DE CIERRE',
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 12,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -108,7 +108,7 @@ class ThermalPrintService {
             pw.Center(
               child: pw.Text(
                 nombreCaja.isEmpty ? 'RESUMEN' : 'RESUMEN - $nombreCaja',
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 10,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -130,7 +130,8 @@ class ThermalPrintService {
             // INGRESOS
             pw.Text(
               'INGRESOS',
-              style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                  fontSize: 9, fontWeight: pw.FontWeight.bold),
             ),
             _buildLineaThermal('Depósitos:', _formatCurrency(totalDepositos)),
             _buildLineaThermal(
@@ -156,7 +157,7 @@ class ThermalPrintService {
                           padding: const pw.EdgeInsets.only(left: 10),
                           child: pw.Text(
                             o.numero ?? "Sin motivo",
-                            style: pw.TextStyle(
+                            style: const pw.TextStyle(
                                 fontSize: 7, fontStyle: pw.FontStyle.italic),
                           ),
                         ),
@@ -168,7 +169,7 @@ class ThermalPrintService {
                           child: pw.Text(
                             _formatCurrency(o.monto),
                             textAlign: pw.TextAlign.right,
-                            style: pw.TextStyle(
+                            style: const pw.TextStyle(
                                 fontSize: 7, fontStyle: pw.FontStyle.italic),
                           ),
                         ),
@@ -182,8 +183,8 @@ class ThermalPrintService {
               pw.SizedBox(height: 2),
               pw.Text(
                 'Tarjetas Venta:',
-                style:
-                    pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
+                style: const pw.TextStyle(
+                    fontSize: 8, fontWeight: pw.FontWeight.bold),
               ),
               ...tarjetas.map((t) => _buildLineaThermal(
                     '  ${t.numero}',
@@ -217,7 +218,8 @@ class ThermalPrintService {
             // SALIDAS
             pw.Text(
               'SALIDAS',
-              style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                  fontSize: 9, fontWeight: pw.FontWeight.bold),
             ),
             _buildLineaThermal('Pagos:', _formatCurrency(totalPagos)),
             _buildLineaThermal(
@@ -238,7 +240,7 @@ class ThermalPrintService {
                           padding: const pw.EdgeInsets.only(left: 10),
                           child: pw.Text(
                             o.numero ?? "Sin motivo",
-                            style: pw.TextStyle(
+                            style: const pw.TextStyle(
                                 fontSize: 7, fontStyle: pw.FontStyle.italic),
                           ),
                         ),
@@ -250,7 +252,7 @@ class ThermalPrintService {
                           child: pw.Text(
                             _formatCurrency(o.monto),
                             textAlign: pw.TextAlign.right,
-                            style: pw.TextStyle(
+                            style: const pw.TextStyle(
                                 fontSize: 7, fontStyle: pw.FontStyle.italic),
                           ),
                         ),
@@ -288,8 +290,8 @@ class ThermalPrintService {
               pw.Center(
                 child: pw.Text(
                   '⚠ CORRECCIONES',
-                  style:
-                      pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                  style: const pw.TextStyle(
+                      fontSize: 9, fontWeight: pw.FontWeight.bold),
                 ),
               ),
               pw.SizedBox(height: 4),
@@ -354,7 +356,7 @@ class ThermalPrintService {
             pw.Center(
               child: pw.Text(
                 'FACTURAS DE CONTADO',
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 12,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -363,7 +365,7 @@ class ThermalPrintService {
             pw.Center(
               child: pw.Text(
                 nombreCaja.isEmpty ? '' : nombreCaja,
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 10,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -385,7 +387,8 @@ class ThermalPrintService {
             // Lista de facturas
             pw.Text(
               'DETALLE DE FACTURAS',
-              style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                  fontSize: 9, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 2),
             ...facturasContado.map((f) => _buildLineaThermal(
@@ -453,7 +456,7 @@ class ThermalPrintService {
             pw.Center(
               child: pw.Text(
                 'FACTURAS A CRÉDITO',
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 12,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -462,7 +465,7 @@ class ThermalPrintService {
             pw.Center(
               child: pw.Text(
                 nombreCaja.isEmpty ? '' : nombreCaja,
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 10,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -484,7 +487,8 @@ class ThermalPrintService {
             // Lista de facturas
             pw.Text(
               'DETALLE DE FACTURAS',
-              style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                  fontSize: 9, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 2),
             ...facturasCredito.map((f) => _buildLineaThermal(
@@ -601,7 +605,7 @@ class ThermalPrintService {
             pw.Center(
               child: pw.Text(
                 'ENTREGA',
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 12,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -610,7 +614,7 @@ class ThermalPrintService {
             pw.Center(
               child: pw.Text(
                 nombreCaja.isEmpty ? '' : nombreCaja,
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 10,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -705,7 +709,7 @@ class ThermalPrintService {
             pw.Center(
               child: pw.Text(
                 'CONTROL DE CIERRE',
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 12,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -714,7 +718,7 @@ class ThermalPrintService {
             pw.Center(
               child: pw.Text(
                 nombreCaja.isEmpty ? 'DON JOSÉ' : 'DON JOSÉ - $nombreCaja',
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 10,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -737,8 +741,8 @@ class ThermalPrintService {
             if (boletas.isNotEmpty) ...[
               pw.Text(
                 'BOLETAS',
-                style:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                style: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 2),
               ...boletas.map((item) {
@@ -765,8 +769,8 @@ class ThermalPrintService {
             if (facturas.isNotEmpty) ...[
               pw.Text(
                 'FACTURAS',
-                style:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                style: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 2),
               ...facturas.map((item) {
