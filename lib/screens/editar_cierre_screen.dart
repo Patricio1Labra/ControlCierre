@@ -1436,15 +1436,22 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                               margin: const EdgeInsets.only(bottom: 8),
                               child: ListTile(
                                 leading: Icon(
-                                    f.esCredito
-                                        ? Icons.credit_card
-                                        : Icons.attach_money,
-                                    color: f.esCredito
-                                        ? Colors.orange
-                                        : Colors.green),
+                                    f.esMixto
+                                        ? Icons.receipt_long
+                                        : (f.esCredito
+                                            ? Icons.credit_card
+                                            : Icons.attach_money),
+                                    color: f.esMixto
+                                        ? Colors.purple
+                                        : (f.esCredito
+                                            ? Colors.orange
+                                            : Colors.green)),
                                 title: Text('Factura #${f.numero}'),
-                                subtitle: Text(
-                                    '${f.esCredito ? "Crédito" : "Contado"} - ${_formatCurrency(f.monto)}'),
+                                subtitle: Text(f.esMixto
+                                    ? 'Crédito: ${_formatCurrency(f.montoCredito)} | Contado: ${_formatCurrency(f.montoContado)}'
+                                    : (f.esCredito
+                                        ? 'Crédito - ${_formatCurrency(f.monto)}'
+                                        : 'Contado - ${_formatCurrency(f.monto)}')),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
