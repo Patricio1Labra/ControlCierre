@@ -319,7 +319,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
         await _db.updateBoletaCredito(BoletaCredito(
           id: boleta.id,
           cierreId: boleta.cierreId,
-          rut: nuevoRut,
+          rut: nuevoRut ?? boleta.rut,
           monto: nuevoMonto,
           fecha: boleta.fecha,
         ));
@@ -413,7 +413,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
         await _db.updatePago(Pago(
           id: pago.id,
           cierreId: pago.cierreId,
-          rut: nuevoRut,
+          rut: nuevoRut ?? pago.rut,
           monto: nuevoMonto,
           fecha: pago.fecha,
         ));
