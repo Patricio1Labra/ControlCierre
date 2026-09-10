@@ -1356,60 +1356,72 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Información del cierre
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Sesión ${widget.cierre.numeroSesion}',
-                              style: Theme.of(context).textTheme.titleLarge),
-                          const SizedBox(height: 8),
-                          Text(
-                              'Fecha: ${_dateFormat.format(widget.cierre.fecha)}'),
-                          if (widget.cierre.nombreCajero != null)
-                            Text('Cajero: ${widget.cierre.nombreCajero}'),
-                          Text(
-                              'Estado: ${widget.cierre.cerrada ? "Cerrada" : "Abierta"}'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Efectivo y Tarjetas
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Montos Principales',
-                              style: Theme.of(context).textTheme.titleMedium),
-                          const SizedBox(height: 16),
-                          TextField(
-                            controller: _efectivoController,
-                            decoration: const InputDecoration(
-                                labelText: 'Efectivo',
-                                prefixText: '\$',
-                                border: OutlineInputBorder()),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [PesoInputFormatter()],
+                  // Información del cierre y Montos Principales
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Sesión
+                      Expanded(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Sesión ${widget.cierre.numeroSesion}',
+                                    style:
+                                        Theme.of(context).textTheme.titleLarge),
+                                const SizedBox(height: 8),
+                                Text(
+                                    'Fecha: ${_dateFormat.format(widget.cierre.fecha)}'),
+                                if (widget.cierre.nombreCajero != null)
+                                  Text('Cajero: ${widget.cierre.nombreCajero}'),
+                                Text(
+                                    'Estado: ${widget.cierre.cerrada ? "Cerrada" : "Abierta"}'),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 16),
-                          TextField(
-                            controller: _tarjetasController,
-                            decoration: const InputDecoration(
-                                labelText: 'Tarjetas',
-                                prefixText: '\$',
-                                border: OutlineInputBorder()),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [PesoInputFormatter()],
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 16),
+                      // Montos Principales
+                      Expanded(
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Montos Principales',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium),
+                                const SizedBox(height: 16),
+                                TextField(
+                                  controller: _efectivoController,
+                                  decoration: const InputDecoration(
+                                      labelText: 'Efectivo',
+                                      prefixText: '\$',
+                                      border: OutlineInputBorder()),
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [PesoInputFormatter()],
+                                ),
+                                const SizedBox(height: 16),
+                                TextField(
+                                  controller: _tarjetasController,
+                                  decoration: const InputDecoration(
+                                      labelText: 'Tarjetas',
+                                      prefixText: '\$',
+                                      border: OutlineInputBorder()),
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [PesoInputFormatter()],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
 
