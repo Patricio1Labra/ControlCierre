@@ -144,6 +144,27 @@ class RutInputFormatter extends TextInputFormatter {
   }
 }
 
+class _HoraInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (text.isEmpty) return newValue.copyWith(text: '');
+
+    String formatted = text;
+    if (text.length > 2) {
+      formatted = '${text.substring(0, 2)}:${text.substring(2)}';
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
 class _ClockTitle extends StatefulWidget {
   final String nombreCaja;
   const _ClockTitle({required this.nombreCaja});
@@ -684,8 +705,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
         return Card(
           child: ExpansionTile(
-            key: ValueKey(
-                'factura_${_cierreActual?.numeroSesion}_${numeroController.text}'),
+            key: ValueKey('factura_$_panelExpandido'),
             initiallyExpanded: _panelExpandido == 0,
             onExpansionChanged: (expanded) {
               _handlePanelExpansion(0, expanded);
@@ -693,7 +713,6 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
             leading: const Icon(Icons.receipt, size: 20),
             title: const Text('Factura',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            trailing: const Icon(Icons.expand_more),
             children: [
               Padding(
                 padding: const EdgeInsets.all(12),
@@ -1179,7 +1198,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                       final movimiento = MovimientoSimple(
                         cierreId: _cierreActual!.id!,
                         tipo: 'transferencia',
-                        rut: numeroBoletaFacturaController.text.isEmpty
+                        numero: numeroBoletaFacturaController.text.isEmpty
                             ? null
                             : numeroBoletaFacturaController.text,
                         monto: _monto(montoController.text),
@@ -1388,6 +1407,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
   Widget _buildFormularioDeposito() {
     final montoController = TextEditingController();
+    final horaController = TextEditingController();
 
     return Card(
       child: ExpansionTile(
@@ -1414,22 +1434,22 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [PesoInputFormatter()],
                   style: const TextStyle(fontSize: 13),
-                  onSubmitted: (_) async {
-                    if (montoController.text.isNotEmpty) {
-                      final movimiento = MovimientoSimple(
-                        cierreId: _cierreActual!.id!,
-                        tipo: 'deposito',
-                        monto: _monto(montoController.text),
-                        fecha: DateTime.now(),
-                      );
-
-                      await _db.insertMovimiento(movimiento);
-
-                      await _cargarDatos();
-
-                      montoController.clear();
-                    }
-                  },
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: horaController,
+                  decoration: const InputDecoration(
+                    labelText: 'Hora (opcional, HH:mm)',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.datetime,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(4),
+                    _HoraInputFormatter(),
+                  ],
+                  style: const TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
@@ -1442,6 +1462,9 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                           tipo: 'deposito',
                           monto: _monto(montoController.text),
                           fecha: DateTime.now(),
+                          horaDeposito: horaController.text.isEmpty
+                              ? null
+                              : horaController.text,
                         );
 
                         await _db.insertMovimiento(movimiento);
@@ -1449,6 +1472,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         await _cargarDatos();
 
                         montoController.clear();
+                        horaController.clear();
                       }
                     },
                     child:
@@ -1620,18 +1644,19 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Switch(
-              value: _otrosEsIngreso,
-              onChanged: (value) {
-                setState(() {
-                  _otrosEsIngreso = value;
-                });
-              },
-            ),
             Text(_otrosEsIngreso ? 'Ingreso' : 'Salida',
-                style: const TextStyle(fontSize: 12)),
-            const SizedBox(width: 8),
-            const Icon(Icons.expand_more),
+                style: const TextStyle(fontSize: 11)),
+            Transform.scale(
+              scale: 0.8,
+              child: Switch(
+                value: _otrosEsIngreso,
+                onChanged: (value) {
+                  setState(() {
+                    _otrosEsIngreso = value;
+                  });
+                },
+              ),
+            ),
           ],
         ),
         children: [
@@ -1744,18 +1769,19 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Switch(
-                  value: _donJoseEsBoleta,
-                  onChanged: (value) {
-                    setState(() {
-                      _donJoseEsBoleta = value;
-                    });
-                  },
-                ),
                 Text(_donJoseEsBoleta ? 'Boleta' : 'Factura',
-                    style: const TextStyle(fontSize: 12)),
-                const SizedBox(width: 8),
-                const Icon(Icons.expand_more),
+                    style: const TextStyle(fontSize: 11)),
+                Transform.scale(
+                  scale: 0.8,
+                  child: Switch(
+                    value: _donJoseEsBoleta,
+                    onChanged: (value) {
+                      setState(() {
+                        _donJoseEsBoleta = value;
+                      });
+                    },
+                  ),
+                ),
               ],
             ),
             children: [
@@ -2266,9 +2292,13 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         dense: true,
                         contentPadding: EdgeInsets.zero,
                         title: Text(
-                          item.numero != null
-                              ? 'N° ${item.numero}'
-                              : item.rut ?? 'Sin info',
+                          item.numero ??
+                              (item.tipo == 'transferencia'
+                                  ? item.rut
+                                  : null) ??
+                              (item.tipo == 'deposito'
+                                  ? (item.horaDeposito ?? '')
+                                  : 'Sin info'),
                           style: const TextStyle(fontSize: 13),
                         ),
                         subtitle: Text(_dateFormat.format(item.fecha),
@@ -2875,13 +2905,26 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
   }
 
   Future<void> _editarMovimiento(MovimientoSimple movimiento) async {
-    final numeroController =
-        TextEditingController(text: movimiento.numero ?? '');
+    final esTransferencia = movimiento.tipo == 'transferencia';
+    final esDonJose = movimiento.tipo == 'don_jose';
+    String numeroInicial =
+        movimiento.numero ?? (esTransferencia ? movimiento.rut : null) ?? '';
+    if (esDonJose && numeroInicial.isNotEmpty) {
+      final spaceIndex = numeroInicial.indexOf(' ');
+      numeroInicial = spaceIndex != -1
+          ? numeroInicial.substring(spaceIndex + 1)
+          : numeroInicial;
+    }
+    final numeroController = TextEditingController(text: numeroInicial);
 
     final rutController = TextEditingController(text: movimiento.rut ?? '');
 
     final montoController =
         TextEditingController(text: _numberFormat.format(movimiento.monto));
+
+    final esDeposito = movimiento.tipo == 'deposito';
+    final horaController = TextEditingController(
+        text: esDeposito ? (movimiento.horaDeposito ?? '') : '');
 
     await showDialog(
       context: context,
@@ -2893,12 +2936,25 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
             if (_tieneNumero(movimiento.tipo))
               TextField(
                 controller: numeroController,
-                decoration: const InputDecoration(
-                  labelText: 'Número',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: movimiento.tipo == 'transferencia'
+                      ? 'Número de Boleta o Factura'
+                      : (movimiento.tipo == 'don_jose'
+                          ? 'Número de Boleta o Factura'
+                          : (movimiento.tipo == 'otros_entrada' ||
+                                  movimiento.tipo == 'otros_salida'
+                              ? 'Motivo'
+                              : 'Número')),
+                  border: const OutlineInputBorder(),
                 ),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                keyboardType: (movimiento.tipo == 'otros_entrada' ||
+                        movimiento.tipo == 'otros_salida')
+                    ? TextInputType.text
+                    : TextInputType.number,
+                inputFormatters: (movimiento.tipo == 'otros_entrada' ||
+                        movimiento.tipo == 'otros_salida')
+                    ? []
+                    : [FilteringTextInputFormatter.digitsOnly],
               ),
             if (_tieneNumero(movimiento.tipo)) const SizedBox(height: 12),
             if (_tieneRut(movimiento.tipo))
@@ -2911,6 +2967,21 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 inputFormatters: [RutInputFormatter()],
               ),
             if (_tieneRut(movimiento.tipo)) const SizedBox(height: 12),
+            if (esDeposito)
+              TextField(
+                controller: horaController,
+                decoration: const InputDecoration(
+                  labelText: 'Hora (HH:mm)',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.datetime,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                  _HoraInputFormatter(),
+                ],
+              ),
+            if (esDeposito) const SizedBox(height: 12),
             TextField(
               controller: montoController,
               decoration: const InputDecoration(
@@ -2968,12 +3039,20 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
                 // Verificar duplicados de número para Don José
 
+                String numeroGuardado = numeroController.text;
+                if (esDonJose && numeroGuardado.isNotEmpty) {
+                  final tipoDoc =
+                      movimiento.numero?.startsWith('Boleta') == true
+                          ? 'Boleta'
+                          : 'Factura';
+                  numeroGuardado = '$tipoDoc $numeroGuardado';
+                }
+
                 if (movimiento.tipo == 'don_jose' &&
-                    numeroController.text.isNotEmpty &&
-                    numeroController.text != movimiento.numero) {
+                    numeroGuardado.isNotEmpty &&
+                    numeroGuardado != movimiento.numero) {
                   final numeroExiste = _donJose.any((d) =>
-                      d.numero == numeroController.text &&
-                      d.id != movimiento.id);
+                      d.numero == numeroGuardado && d.id != movimiento.id);
 
                   if (numeroExiste) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -2992,12 +3071,15 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                   id: movimiento.id,
                   cierreId: movimiento.cierreId,
                   tipo: movimiento.tipo,
-                  numero: _tieneNumero(movimiento.tipo)
-                      ? numeroController.text
-                      : null,
+                  numero: _tieneNumero(movimiento.tipo) ? numeroGuardado : null,
                   rut: _tieneRut(movimiento.tipo) ? rutController.text : null,
                   monto: _monto(montoController.text),
                   fecha: movimiento.fecha,
+                  horaDeposito: esDeposito
+                      ? (horaController.text.isEmpty
+                          ? null
+                          : horaController.text)
+                      : movimiento.horaDeposito,
                 );
 
                 await _db.updateMovimiento(movimientoActualizado);
@@ -3015,6 +3097,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
     montoController.dispose();
     rutController.dispose();
     numeroController.dispose();
+    if (esDeposito) horaController.dispose();
   }
 
   String _getTituloMovimiento(String tipo) {
@@ -3034,13 +3117,24 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
       case 'don_jose':
         return 'Don José';
 
+      case 'otros_entrada':
+        return 'Otros (Ingreso)';
+
+      case 'otros_salida':
+        return 'Otros (Salida)';
+
       default:
         return tipo;
     }
   }
 
   bool _tieneNumero(String tipo) {
-    return tipo == 'cheque' || tipo == 'nota_credito';
+    return tipo == 'cheque' ||
+        tipo == 'nota_credito' ||
+        tipo == 'transferencia' ||
+        tipo == 'otros_entrada' ||
+        tipo == 'otros_salida' ||
+        tipo == 'don_jose';
   }
 
   bool _tieneRut(String tipo) {
@@ -3442,6 +3536,46 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         ),
                         contentPadding: EdgeInsets.zero,
                       ),
+
+                      const SizedBox(height: 12),
+
+                      // Seleccionar impresora
+
+                      if (printers.isNotEmpty) ...[
+                        const Text('Impresora',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<Printer>(
+                          value: printers.any((p) => p.name == selectedPrinter)
+                              ? printers
+                                  .firstWhere((p) => p.name == selectedPrinter)
+                              : null,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Seleccionar impresora',
+                          ),
+                          items: printers.map((Printer printer) {
+                            return DropdownMenuItem<Printer>(
+                              value: printer,
+                              child: Text(printer.name,
+                                  style: const TextStyle(fontSize: 12)),
+                            );
+                          }).toList(),
+                          onChanged: (Printer? nuevaImpresora) {
+                            setStateDialog(() {
+                              selectedPrinter = nuevaImpresora?.name;
+                            });
+                          },
+                        ),
+                      ] else ...[
+                        const Text('Impresora',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 12),
+                        const Text('No se detectaron impresoras',
+                            style: TextStyle(color: Colors.grey)),
+                      ],
 
                       const SizedBox(height: 12),
 

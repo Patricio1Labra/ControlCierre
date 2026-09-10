@@ -223,8 +223,6 @@ class ThermalPrintService {
             ),
             _buildLineaThermal('Pagos:', _formatCurrency(totalPagos)),
             _buildLineaThermal(
-                'Total Facturas:', _formatCurrency(totalFacturas)),
-            _buildLineaThermal(
                 'Fondo Caja:', _formatCurrency(cierre.aperturaCaja)),
 
             // Otros con desglose

@@ -427,7 +427,6 @@ class PdfService {
                   fontSize: 14, fontWeight: pw.FontWeight.bold)),
           pw.Divider(),
           _buildFilaResumen('Pagos:', pagos),
-          _buildFilaResumen('Total Facturas:', totalFacturas),
           _buildFilaResumen('Fondo Caja:', fondoCaja),
           if (otrosSalidaDetalle.isNotEmpty) ...[
             _buildFilaResumen('Otros:', otrosSalida),

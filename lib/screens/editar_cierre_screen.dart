@@ -380,18 +380,92 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       MovimientoSimple mov, String tipoNombre) async {
     final montoController =
         TextEditingController(text: _numberFormat.format(mov.monto));
+    final esTransferencia = mov.tipo == 'transferencia';
+    final esOtros = mov.tipo == 'otros_entrada' || mov.tipo == 'otros_salida';
+    final esDonJose = mov.tipo == 'don_jose';
+    String numeroInicial =
+        mov.numero ?? (esTransferencia ? mov.rut : null) ?? '';
+    if (esDonJose && numeroInicial.isNotEmpty) {
+      final spaceIndex = numeroInicial.indexOf(' ');
+      numeroInicial = spaceIndex != -1
+          ? numeroInicial.substring(spaceIndex + 1)
+          : numeroInicial;
+    }
+    final numeroController = TextEditingController(
+        text: esTransferencia
+            ? (mov.rut ?? '')
+            : (esOtros || esDonJose ? numeroInicial : ''));
 
-    final resultado = await showDialog<double>(
+    final esDeposito = mov.tipo == 'deposito';
+    final horaController =
+        TextEditingController(text: esDeposito ? (mov.horaDeposito ?? '') : '');
+
+    final resultado = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
             'Editar $tipoNombre${mov.numero != null ? "\n#${mov.numero}" : ""}'),
-        content: TextField(
-          controller: montoController,
-          decoration:
-              const InputDecoration(labelText: 'Monto', prefixText: '\$'),
-          keyboardType: TextInputType.number,
-          inputFormatters: [PesoInputFormatter()],
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (esTransferencia)
+              TextField(
+                controller: numeroController,
+                decoration: const InputDecoration(
+                  labelText: 'Número de Boleta o Factura',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+            if (esTransferencia) const SizedBox(height: 12),
+            if (esDonJose)
+              TextField(
+                controller: numeroController,
+                decoration: const InputDecoration(
+                  labelText: 'Número de Boleta o Factura',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+            if (esDonJose) const SizedBox(height: 12),
+            if (esOtros)
+              TextField(
+                controller: numeroController,
+                decoration: const InputDecoration(
+                  labelText: 'Motivo',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.text,
+              ),
+            if (esOtros) const SizedBox(height: 12),
+            if (esDeposito)
+              TextField(
+                controller: horaController,
+                decoration: const InputDecoration(
+                  labelText: 'Hora (HH:mm)',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.datetime,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                ],
+              ),
+            if (esDeposito) const SizedBox(height: 12),
+            TextField(
+              controller: montoController,
+              decoration:
+                  const InputDecoration(labelText: 'Monto', prefixText: '\$'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [PesoInputFormatter()],
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -402,7 +476,34 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
               final texto =
                   montoController.text.replaceAll('.', '').replaceAll(',', '');
               final nuevoMonto = double.tryParse(texto);
-              if (nuevoMonto != null) Navigator.pop(context, nuevoMonto);
+              if (nuevoMonto != null) {
+                String? numeroGuardado = null;
+                if (esOtros || esDonJose) {
+                  if (numeroController.text.isNotEmpty) {
+                    if (esDonJose) {
+                      final tipoDoc = mov.numero?.startsWith('Boleta') == true
+                          ? 'Boleta'
+                          : 'Factura';
+                      numeroGuardado = '$tipoDoc ${numeroController.text}';
+                    } else {
+                      numeroGuardado = numeroController.text;
+                    }
+                  }
+                } else {
+                  numeroGuardado = mov.numero;
+                }
+
+                Navigator.pop(context, {
+                  'monto': nuevoMonto,
+                  'rut': esTransferencia
+                      ? (numeroController.text.isEmpty
+                          ? null
+                          : numeroController.text)
+                      : mov.rut,
+                  'numero': numeroGuardado,
+                  'hora': esDeposito ? horaController.text : null,
+                });
+              }
             },
             child: const Text('Guardar'),
           ),
@@ -410,28 +511,42 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       ),
     );
 
-    if (resultado != null && resultado != mov.monto) {
-      await _db.updateMovimiento(MovimientoSimple(
-        id: mov.id,
-        cierreId: mov.cierreId,
-        tipo: mov.tipo,
-        numero: mov.numero,
-        rut: mov.rut,
-        monto: resultado,
-        fecha: mov.fecha,
-      ));
+    if (resultado != null) {
+      final nuevoMonto = resultado['monto'] as double;
+      final nuevoRut = resultado['rut'] as String?;
+      final nuevoNumero = resultado['numero'] as String?;
+      final nuevaHora = resultado['hora'] as String?;
 
-      final identificador = mov.numero ?? mov.rut ?? '';
-      _registrarCorreccion(
-        'Corrección $tipoNombre ${identificador.isNotEmpty ? "$identificador: " : ""}antes ${_formatCurrency(mov.monto)}, ahora ${_formatCurrency(resultado)}',
-        tipoNombre,
-        identificador.isNotEmpty ? identificador : null,
-        'monto',
-        _formatCurrency(mov.monto),
-        _formatCurrency(resultado),
-      );
-      await _cargarDatos();
+      if (nuevoMonto != mov.monto ||
+          nuevoRut != mov.rut ||
+          nuevoNumero != mov.numero ||
+          nuevaHora != mov.horaDeposito) {
+        await _db.updateMovimiento(MovimientoSimple(
+          id: mov.id,
+          cierreId: mov.cierreId,
+          tipo: mov.tipo,
+          numero: nuevoNumero,
+          rut: nuevoRut,
+          monto: nuevoMonto,
+          fecha: mov.fecha,
+          horaDeposito: esDeposito ? nuevaHora : mov.horaDeposito,
+        ));
+
+        final identificador = mov.numero ?? mov.rut ?? '';
+        _registrarCorreccion(
+          'Corrección $tipoNombre ${identificador.isNotEmpty ? "$identificador: " : ""}antes ${_formatCurrency(mov.monto)}, ahora ${_formatCurrency(nuevoMonto)}',
+          tipoNombre,
+          identificador.isNotEmpty ? identificador : null,
+          'monto',
+          _formatCurrency(mov.monto),
+          _formatCurrency(nuevoMonto),
+        );
+        await _cargarDatos();
+      }
     }
+    montoController.dispose();
+    numeroController.dispose();
+    if (esDeposito) horaController.dispose();
   }
 
   Future<void> _eliminarMovimiento(

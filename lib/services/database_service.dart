@@ -29,7 +29,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 11,
+      version: 12,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -164,6 +164,11 @@ class DatabaseService {
       // Agregar opción de usar impresora por defecto
       await db.execute(
           'ALTER TABLE configuracion_impresion ADD COLUMN usar_impresora_por_defecto INTEGER NOT NULL DEFAULT 1');
+    }
+    if (oldVersion < 12) {
+      // Agregar columna hora_deposito para depósitos
+      await db.execute(
+          'ALTER TABLE movimientos_simples ADD COLUMN hora_deposito TEXT');
     }
   }
 
