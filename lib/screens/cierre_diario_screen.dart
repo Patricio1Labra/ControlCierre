@@ -2296,13 +2296,24 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                               (item.tipo == 'transferencia'
                                   ? item.rut
                                   : null) ??
-                              (item.tipo == 'deposito'
-                                  ? (item.horaDeposito ?? '')
+                              (item.tipo == 'cheque'
+                                  ? (item.rut ?? 'Sin RUT')
                                   : 'Sin info'),
                           style: const TextStyle(fontSize: 13),
                         ),
-                        subtitle: Text(_dateFormat.format(item.fecha),
-                            style: const TextStyle(fontSize: 11)),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_dateFormat.format(item.fecha),
+                                style: const TextStyle(fontSize: 11)),
+                            if (item.tipo == 'deposito' &&
+                                item.horaDeposito != null &&
+                                item.horaDeposito!.isNotEmpty)
+                              Text('Hora: ${item.horaDeposito}',
+                                  style: const TextStyle(
+                                      fontSize: 11, color: Colors.teal)),
+                          ],
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -2976,9 +2987,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 ),
                 keyboardType: TextInputType.datetime,
                 inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(4),
                   _HoraInputFormatter(),
+                  LengthLimitingTextInputFormatter(5),
                 ],
               ),
             if (esDeposito) const SizedBox(height: 12),

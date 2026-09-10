@@ -15,6 +15,27 @@ import '../services/preferences_service.dart';
 import '../utils/peso_input_formatter.dart';
 import 'cierre_diario_screen.dart';
 
+class _HoraInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (text.isEmpty) return newValue.copyWith(text: '');
+
+    String formatted = text;
+    if (text.length > 2) {
+      formatted = '${text.substring(0, 2)}:${text.substring(2)}';
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
 class EditarCierreScreen extends StatefulWidget {
   final CierreCaja cierre;
 
@@ -241,17 +262,32 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
   Future<void> _editarBoletaCredito(BoletaCredito boleta) async {
     final montoController =
         TextEditingController(text: _numberFormat.format(boleta.monto));
+    final rutController = TextEditingController(text: boleta.rut ?? '');
 
-    final resultado = await showDialog<double>(
+    final resultado = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Editar Boleta Crédito\nRUT: ${boleta.rut}'),
-        content: TextField(
-          controller: montoController,
-          decoration:
-              const InputDecoration(labelText: 'Monto', prefixText: '\$'),
-          keyboardType: TextInputType.number,
-          inputFormatters: [PesoInputFormatter()],
+        title: const Text('Editar Boleta Crédito'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: rutController,
+              decoration: const InputDecoration(
+                labelText: 'RUT',
+                border: OutlineInputBorder(),
+              ),
+              inputFormatters: [RutInputFormatter()],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: montoController,
+              decoration:
+                  const InputDecoration(labelText: 'Monto', prefixText: '\$'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [PesoInputFormatter()],
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -262,7 +298,12 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
               final texto =
                   montoController.text.replaceAll('.', '').replaceAll(',', '');
               final nuevoMonto = double.tryParse(texto);
-              if (nuevoMonto != null) Navigator.pop(context, nuevoMonto);
+              if (nuevoMonto != null) {
+                Navigator.pop(context, {
+                  'monto': nuevoMonto,
+                  'rut': rutController.text.isEmpty ? null : rutController.text,
+                });
+              }
             },
             child: const Text('Guardar'),
           ),
@@ -270,24 +311,29 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       ),
     );
 
-    if (resultado != null && resultado != boleta.monto) {
-      await _db.updateBoletaCredito(BoletaCredito(
-        id: boleta.id,
-        cierreId: boleta.cierreId,
-        rut: boleta.rut,
-        monto: resultado,
-        fecha: boleta.fecha,
-      ));
+    if (resultado != null) {
+      final nuevoMonto = resultado['monto'] as double;
+      final nuevoRut = resultado['rut'] as String?;
 
-      _registrarCorreccion(
-        'Corrección Boleta Crédito RUT ${boleta.rut}: antes ${_formatCurrency(boleta.monto)}, ahora ${_formatCurrency(resultado)}',
-        'Boleta Crédito',
-        boleta.rut,
-        'monto',
-        _formatCurrency(boleta.monto),
-        _formatCurrency(resultado),
-      );
-      await _cargarDatos();
+      if (nuevoMonto != boleta.monto || nuevoRut != boleta.rut) {
+        await _db.updateBoletaCredito(BoletaCredito(
+          id: boleta.id,
+          cierreId: boleta.cierreId,
+          rut: nuevoRut,
+          monto: nuevoMonto,
+          fecha: boleta.fecha,
+        ));
+
+        _registrarCorreccion(
+          'Corrección Boleta Crédito RUT ${boleta.rut}: antes ${_formatCurrency(boleta.monto)}, ahora ${_formatCurrency(nuevoMonto)}',
+          'Boleta Crédito',
+          boleta.rut,
+          'monto',
+          _formatCurrency(boleta.monto),
+          _formatCurrency(nuevoMonto),
+        );
+        await _cargarDatos();
+      }
     }
   }
 
@@ -310,17 +356,32 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
   Future<void> _editarPago(Pago pago) async {
     final montoController =
         TextEditingController(text: _numberFormat.format(pago.monto));
+    final rutController = TextEditingController(text: pago.rut ?? '');
 
-    final resultado = await showDialog<double>(
+    final resultado = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Editar Pago\nRUT: ${pago.rut}'),
-        content: TextField(
-          controller: montoController,
-          decoration:
-              const InputDecoration(labelText: 'Monto', prefixText: '\$'),
-          keyboardType: TextInputType.number,
-          inputFormatters: [PesoInputFormatter()],
+        title: const Text('Editar Pago'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: rutController,
+              decoration: const InputDecoration(
+                labelText: 'RUT',
+                border: OutlineInputBorder(),
+              ),
+              inputFormatters: [RutInputFormatter()],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: montoController,
+              decoration:
+                  const InputDecoration(labelText: 'Monto', prefixText: '\$'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [PesoInputFormatter()],
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -331,7 +392,12 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
               final texto =
                   montoController.text.replaceAll('.', '').replaceAll(',', '');
               final nuevoMonto = double.tryParse(texto);
-              if (nuevoMonto != null) Navigator.pop(context, nuevoMonto);
+              if (nuevoMonto != null) {
+                Navigator.pop(context, {
+                  'monto': nuevoMonto,
+                  'rut': rutController.text.isEmpty ? null : rutController.text,
+                });
+              }
             },
             child: const Text('Guardar'),
           ),
@@ -339,24 +405,29 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
       ),
     );
 
-    if (resultado != null && resultado != pago.monto) {
-      await _db.updatePago(Pago(
-        id: pago.id,
-        cierreId: pago.cierreId,
-        rut: pago.rut,
-        monto: resultado,
-        fecha: pago.fecha,
-      ));
+    if (resultado != null) {
+      final nuevoMonto = resultado['monto'] as double;
+      final nuevoRut = resultado['rut'] as String?;
 
-      _registrarCorreccion(
-        'Corrección Pago RUT ${pago.rut}: antes ${_formatCurrency(pago.monto)}, ahora ${_formatCurrency(resultado)}',
-        'Pago',
-        pago.rut,
-        'monto',
-        _formatCurrency(pago.monto),
-        _formatCurrency(resultado),
-      );
-      await _cargarDatos();
+      if (nuevoMonto != pago.monto || nuevoRut != pago.rut) {
+        await _db.updatePago(Pago(
+          id: pago.id,
+          cierreId: pago.cierreId,
+          rut: nuevoRut,
+          monto: nuevoMonto,
+          fecha: pago.fecha,
+        ));
+
+        _registrarCorreccion(
+          'Corrección Pago RUT ${pago.rut}: antes ${_formatCurrency(pago.monto)}, ahora ${_formatCurrency(nuevoMonto)}',
+          'Pago',
+          pago.rut,
+          'monto',
+          _formatCurrency(pago.monto),
+          _formatCurrency(nuevoMonto),
+        );
+        await _cargarDatos();
+      }
     }
   }
 
@@ -381,6 +452,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
     final montoController =
         TextEditingController(text: _numberFormat.format(mov.monto));
     final esTransferencia = mov.tipo == 'transferencia';
+    final esCheque = mov.tipo == 'cheque';
     final esOtros = mov.tipo == 'otros_entrada' || mov.tipo == 'otros_salida';
     final esDonJose = mov.tipo == 'don_jose';
     String numeroInicial =
@@ -394,7 +466,12 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
     final numeroController = TextEditingController(
         text: esTransferencia
             ? (mov.rut ?? '')
-            : (esOtros || esDonJose ? numeroInicial : ''));
+            : (esOtros || esDonJose
+                ? numeroInicial
+                : (esCheque ? mov.numero ?? '' : '')));
+
+    final rutController =
+        TextEditingController(text: esCheque ? mov.rut ?? '' : '');
 
     final esDeposito = mov.tipo == 'deposito';
     final horaController =
@@ -420,6 +497,29 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
             if (esTransferencia) const SizedBox(height: 12),
+            if (esCheque) ...[
+              TextField(
+                controller: numeroController,
+                decoration: const InputDecoration(
+                  labelText: 'Número de Cheque',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: rutController,
+                decoration: const InputDecoration(
+                  labelText: 'RUT',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+                inputFormatters: [RutInputFormatter()],
+              ),
+            ],
+            if (esCheque) const SizedBox(height: 12),
             if (esDonJose)
               TextField(
                 controller: numeroController,
@@ -453,8 +553,8 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                 ),
                 keyboardType: TextInputType.datetime,
                 inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(4),
+                  _HoraInputFormatter(),
+                  LengthLimitingTextInputFormatter(5),
                 ],
               ),
             if (esDeposito) const SizedBox(height: 12),
@@ -489,6 +589,10 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                       numeroGuardado = numeroController.text;
                     }
                   }
+                } else if (esCheque) {
+                  numeroGuardado = numeroController.text.isEmpty
+                      ? null
+                      : numeroController.text;
                 } else {
                   numeroGuardado = mov.numero;
                 }
@@ -499,7 +603,11 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                       ? (numeroController.text.isEmpty
                           ? null
                           : numeroController.text)
-                      : mov.rut,
+                      : (esCheque
+                          ? (rutController.text.isEmpty
+                              ? null
+                              : rutController.text)
+                          : mov.rut),
                   'numero': numeroGuardado,
                   'hora': esDeposito ? horaController.text : null,
                 });
@@ -1602,6 +1710,10 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                                 leading: const Icon(Icons.account_balance,
                                     color: Colors.teal),
                                 title: Text(_formatCurrency(d.monto)),
+                                subtitle: d.horaDeposito != null &&
+                                        d.horaDeposito!.isNotEmpty
+                                    ? Text('Hora: ${d.horaDeposito}')
+                                    : null,
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
