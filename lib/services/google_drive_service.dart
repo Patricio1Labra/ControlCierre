@@ -11,6 +11,7 @@ import 'logger_service.dart';
 class GoogleDriveService {
   drive.DriveApi? _driveApi;
   AutoRefreshingAuthClient? _authClient;
+  StreamSubscription<dynamic>? _credentialSubscription;
 
   /// Inicia el flujo OAuth2 para obtener credenciales
   ///
@@ -124,7 +125,7 @@ class GoogleDriveService {
       _driveApi = drive.DriveApi(_authClient!);
 
       // Actualizar tokens si cambiaron
-      _authClient!.credentialUpdates.listen((newCredentials) async {
+      _credentialSubscription = _authClient!.credentialUpdates.listen((newCredentials) async {
         await logger.info('GoogleDrive', 'Tokens actualizados automáticamente');
         final db = DatabaseService.instance;
         final configActual = await db.getGoogleDriveConfig();
@@ -339,6 +340,7 @@ class GoogleDriveService {
 
   /// Cierra el cliente de autenticación
   void cerrar() {
+    _credentialSubscription?.cancel();
     _authClient?.close();
     _driveApi = null;
     _authClient = null;

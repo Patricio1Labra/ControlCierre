@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 
 import 'package:flutter/gestures.dart';
 
 import 'package:flutter/services.dart';
+import '../utils/peso_input_formatter.dart';
 
 import 'package:intl/intl.dart';
 
@@ -142,6 +144,41 @@ class RutInputFormatter extends TextInputFormatter {
   }
 }
 
+class _ClockTitle extends StatefulWidget {
+  final String nombreCaja;
+  const _ClockTitle({required this.nombreCaja});
+
+  @override
+  State<_ClockTitle> createState() => _ClockTitleState();
+}
+
+class _ClockTitleState extends State<_ClockTitle> {
+  Timer? _timer;
+  final _dateFormat = DateFormat('dd/MM/yyyy HH:mm');
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final now = _dateFormat.format(DateTime.now());
+    return Text(widget.nombreCaja.isEmpty
+        ? 'Control de Cierre - $now'
+        : 'Control de Cierre - ${widget.nombreCaja} - $now');
+  }
+}
+
 class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
   final _db = DatabaseService.instance;
 
@@ -151,6 +188,10 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
   String _formatCurrency(double amount) {
     return '\$${_numberFormat.format(amount)}';
+  }
+
+  double _monto(String texto) {
+    return double.tryParse(texto.replaceAll('.', '').replaceAll(',', '').trim()) ?? 0;
   }
 
   bool _validarRut(String rut) {
@@ -376,7 +417,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [PesoInputFormatter()],
             ),
           ],
         ),
@@ -394,7 +435,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
     );
 
     if (resultado == true) {
-      final apertura = double.tryParse(aperturaCajaController.text) ?? 0;
+      final apertura = _monto(aperturaCajaController.text);
 
       final hoy = DateTime.now();
 
@@ -482,12 +523,16 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_nombreCaja.isEmpty
-            ? 'Control de Cierre - ${_dateFormat.format(DateTime.now())}'
-            : 'Control de Cierre - $_nombreCaja - ${_dateFormat.format(DateTime.now())}'),
+        title: _ClockTitle(nombreCaja: _nombreCaja),
         actions: [
           IconButton(
             icon: const Icon(Icons.history),
@@ -572,7 +617,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
   }
 
   Widget _buildPanelFormularios() {
-    return SingleChildScrollView(
+    return FocusTraversalGroup(child: SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -618,7 +663,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
           if (_panelesVisibles['don_jose'] == true) _buildFormularioDonJose(),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildFormularioFactura() {
@@ -680,7 +725,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         prefixText: '\$ ',
                       ),
                       keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      inputFormatters: [PesoInputFormatter()],
                       style: const TextStyle(fontSize: 13),
                     ),
                     const SizedBox(height: 8),
@@ -693,7 +738,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         prefixText: '\$ ',
                       ),
                       keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      inputFormatters: [PesoInputFormatter()],
                       style: const TextStyle(fontSize: 13),
                       onSubmitted: (_) async {
                         if (numeroController.text.isNotEmpty &&
@@ -717,9 +762,9 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                           }
 
                           final montoContado =
-                              double.tryParse(montoContadoController.text) ?? 0;
+                              _monto(montoContadoController.text);
                           final montoCredito =
-                              double.tryParse(montoCreditoController.text) ?? 0;
+                              _monto(montoCreditoController.text);
 
                           final factura = Factura(
                             cierreId: _cierreActual!.id!,
@@ -762,9 +807,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                       child: ElevatedButton(
                         onPressed: () async {
                           if (numeroController.text.isNotEmpty &&
-                                  montoContadoController.text.isNotEmpty ||
-                              montoCreditoController.text.isNotEmpty) {
-                            // Verificar si el número ya existe
+                                   (montoContadoController.text.isNotEmpty ||
+                               montoCreditoController.text.isNotEmpty)) {
 
                             final numeroExiste = _facturas
                                 .any((f) => f.numero == numeroController.text);
@@ -782,13 +826,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                               return;
                             }
 
-                            final montoContado =
-                                double.tryParse(montoContadoController.text) ??
-                                    0;
-                            final montoCredito =
-                                double.tryParse(montoCreditoController.text) ??
-                                    0;
-
+                            final montoContado = _monto(montoContadoController.text);
+                            final montoCredito = _monto(montoCreditoController.text);
                             final factura = Factura(
                               cierreId: _cierreActual!.id!,
                               numero: numeroController.text,
@@ -878,7 +917,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                   ),
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [PesoInputFormatter()],
                   style: const TextStyle(fontSize: 13),
                   onSubmitted: (_) async {
                     if (montoController.text.isNotEmpty) {
@@ -900,7 +939,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         rut: rutController.text.isEmpty
                             ? 'N/A'
                             : rutController.text,
-                        monto: double.parse(montoController.text),
+                        monto: _monto(montoController.text),
                         fecha: DateTime.now(),
                       );
 
@@ -938,7 +977,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                           rut: rutController.text.isEmpty
                               ? 'N/A'
                               : rutController.text,
-                          monto: double.parse(montoController.text),
+                          monto: _monto(montoController.text),
                           fecha: DateTime.now(),
                         );
 
@@ -1004,7 +1043,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                   ),
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [PesoInputFormatter()],
                   style: const TextStyle(fontSize: 13),
                   onSubmitted: (_) async {
                     if (montoController.text.isNotEmpty) {
@@ -1026,7 +1065,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         rut: rutController.text.isEmpty
                             ? 'N/A'
                             : rutController.text,
-                        monto: double.parse(montoController.text),
+                        monto: _monto(montoController.text),
                         fecha: DateTime.now(),
                       );
 
@@ -1064,7 +1103,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                           rut: rutController.text.isEmpty
                               ? 'N/A'
                               : rutController.text,
-                          monto: double.parse(montoController.text),
+                          monto: _monto(montoController.text),
                           fecha: DateTime.now(),
                         );
 
@@ -1130,7 +1169,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [PesoInputFormatter()],
                   style: const TextStyle(fontSize: 13),
                   onSubmitted: (_) async {
                     if (montoController.text.isNotEmpty) {
@@ -1140,7 +1179,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         rut: numeroBoletaFacturaController.text.isEmpty
                             ? null
                             : numeroBoletaFacturaController.text,
-                        monto: double.parse(montoController.text),
+                        monto: _monto(montoController.text),
                         fecha: DateTime.now(),
                       );
 
@@ -1166,7 +1205,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                           rut: numeroBoletaFacturaController.text.isEmpty
                               ? null
                               : numeroBoletaFacturaController.text,
-                          monto: double.parse(montoController.text),
+                          monto: _monto(montoController.text),
                           fecha: DateTime.now(),
                         );
 
@@ -1247,7 +1286,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                   ),
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [PesoInputFormatter()],
                   style: const TextStyle(fontSize: 13),
                   onSubmitted: (_) async {
                     if (montoController.text.isNotEmpty) {
@@ -1273,7 +1312,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         rut: rutController.text.isEmpty
                             ? null
                             : rutController.text,
-                        monto: double.parse(montoController.text),
+                        monto: _monto(montoController.text),
                         fecha: DateTime.now(),
                       );
 
@@ -1317,7 +1356,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                           rut: rutController.text.isEmpty
                               ? null
                               : rutController.text,
-                          monto: double.parse(montoController.text),
+                          monto: _monto(montoController.text),
                           fecha: DateTime.now(),
                         );
 
@@ -1370,14 +1409,14 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [PesoInputFormatter()],
                   style: const TextStyle(fontSize: 13),
                   onSubmitted: (_) async {
                     if (montoController.text.isNotEmpty) {
                       final movimiento = MovimientoSimple(
                         cierreId: _cierreActual!.id!,
                         tipo: 'deposito',
-                        monto: double.parse(montoController.text),
+                        monto: _monto(montoController.text),
                         fecha: DateTime.now(),
                       );
 
@@ -1398,7 +1437,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         final movimiento = MovimientoSimple(
                           cierreId: _cierreActual!.id!,
                           tipo: 'deposito',
-                          monto: double.parse(montoController.text),
+                          monto: _monto(montoController.text),
                           fecha: DateTime.now(),
                         );
 
@@ -1463,7 +1502,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                   ),
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [PesoInputFormatter()],
                   style: const TextStyle(fontSize: 13),
                   onSubmitted: (_) async {
                     if (montoController.text.isNotEmpty) {
@@ -1491,7 +1530,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         cierreId: _cierreActual!.id!,
                         tipo: 'nota_credito',
                         numero: numeroController.text,
-                        monto: double.parse(montoController.text),
+                        monto: _monto(montoController.text),
                         fecha: DateTime.now(),
                       );
 
@@ -1535,7 +1574,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                           cierreId: _cierreActual!.id!,
                           tipo: 'nota_credito',
                           numero: numeroController.text,
-                          monto: double.parse(montoController.text),
+                          monto: _monto(montoController.text),
                           fecha: DateTime.now(),
                         );
 
@@ -1617,7 +1656,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                   ),
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [PesoInputFormatter()],
                   style: const TextStyle(fontSize: 13),
                   onSubmitted: (_) async {
                     if (motivoController.text.isNotEmpty &&
@@ -1629,7 +1668,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         cierreId: _cierreActual!.id!,
                         tipo: tipo,
                         numero: motivoController.text,
-                        monto: double.parse(montoController.text),
+                        monto: _monto(montoController.text),
                         fecha: DateTime.now(),
                       );
 
@@ -1657,7 +1696,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                           cierreId: _cierreActual!.id!,
                           tipo: tipo,
                           numero: motivoController.text,
-                          monto: double.parse(montoController.text),
+                          monto: _monto(montoController.text),
                           fecha: DateTime.now(),
                         );
 
@@ -1743,7 +1782,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                       ),
                       keyboardType: TextInputType.number,
                       textInputAction: TextInputAction.next,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      inputFormatters: [PesoInputFormatter()],
                       style: const TextStyle(fontSize: 13),
                       onSubmitted: (_) async {
                         if (montoController.text.isNotEmpty) {
@@ -1778,7 +1817,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                             cierreId: _cierreActual!.id!,
                             tipo: 'don_jose',
                             numero: numeroFinal,
-                            monto: double.parse(montoController.text),
+                            monto: _monto(montoController.text),
                             fecha: DateTime.now(),
                           );
 
@@ -1829,7 +1868,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                               cierreId: _cierreActual!.id!,
                               tipo: 'don_jose',
                               numero: numeroFinal,
-                              monto: double.parse(montoController.text),
+                              monto: _monto(montoController.text),
                               fecha: DateTime.now(),
                             );
 
@@ -1939,7 +1978,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
       );
     }
 
-    return LayoutBuilder(
+    return FocusTraversalGroup(child: LayoutBuilder(
       builder: (context, constraints) {
         return Column(
           children: [
@@ -1974,7 +2013,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
           ],
         );
       },
-    );
+    ));
   }
 
   Widget _buildLista(String titulo, List<Factura> items,
@@ -1989,7 +2028,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -2047,6 +2087,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
               ),
             ],
           ),
+          ),
         ),
       ),
     );
@@ -2060,7 +2101,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -2115,6 +2157,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
               ),
             ],
           ),
+          ),
         ),
       ),
     );
@@ -2128,7 +2171,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -2183,6 +2227,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
               ),
             ],
           ),
+          ),
         ),
       ),
     );
@@ -2196,7 +2241,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -2255,6 +2301,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
               ),
             ],
           ),
+          ),
         ),
       ),
     );
@@ -2275,7 +2322,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -2406,6 +2454,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
               ),
             ],
           ),
+          ),
         ),
       ),
     );
@@ -2429,7 +2478,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -2548,6 +2598,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
               ),
             ],
           ),
+          ),
         ),
       ),
     );
@@ -2557,9 +2608,9 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
     final numeroController = TextEditingController(text: factura.numero);
 
     final montoContadoController =
-        TextEditingController(text: factura.montoContado.toStringAsFixed(2));
+        TextEditingController(text: _numberFormat.format(factura.montoContado));
     final montoCreditoController =
-        TextEditingController(text: factura.montoCredito.toStringAsFixed(2));
+        TextEditingController(text: _numberFormat.format(factura.montoCredito));
 
     await showDialog(
       context: context,
@@ -2588,7 +2639,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                     prefixText: '\$ ',
                   ),
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [PesoInputFormatter()],
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -2599,7 +2650,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                     prefixText: '\$ ',
                   ),
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [PesoInputFormatter()],
                 ),
               ],
             ),
@@ -2634,9 +2685,9 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                     }
 
                     final montoContado =
-                        double.tryParse(montoContadoController.text) ?? 0;
+                        _monto(montoContadoController.text);
                     final montoCredito =
-                        double.tryParse(montoCreditoController.text) ?? 0;
+                        _monto(montoCreditoController.text);
 
                     final facturaActualizada = Factura(
                       id: factura.id,
@@ -2661,13 +2712,16 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
         },
       ),
     );
+    montoContadoController.dispose();
+    montoCreditoController.dispose();
+    numeroController.dispose();
   }
 
   Future<void> _editarBoleta(BoletaCredito boleta) async {
     final rutController = TextEditingController(text: boleta.rut);
 
     final montoController =
-        TextEditingController(text: boleta.monto.toStringAsFixed(0));
+        TextEditingController(text: _numberFormat.format(boleta.monto));
 
     await showDialog(
       context: context,
@@ -2692,7 +2746,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [PesoInputFormatter()],
             ),
           ],
         ),
@@ -2721,7 +2775,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                   id: boleta.id,
                   cierreId: boleta.cierreId,
                   rut: rutController.text,
-                  monto: double.parse(montoController.text),
+                  monto: _monto(montoController.text),
                   fecha: boleta.fecha,
                 );
 
@@ -2737,13 +2791,15 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
         ],
       ),
     );
+    montoController.dispose();
+    rutController.dispose();
   }
 
   Future<void> _editarPago(Pago pago) async {
     final rutController = TextEditingController(text: pago.rut);
 
     final montoController =
-        TextEditingController(text: pago.monto.toStringAsFixed(0));
+        TextEditingController(text: _numberFormat.format(pago.monto));
 
     await showDialog(
       context: context,
@@ -2768,7 +2824,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [PesoInputFormatter()],
             ),
           ],
         ),
@@ -2797,7 +2853,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                   id: pago.id,
                   cierreId: pago.cierreId,
                   rut: rutController.text,
-                  monto: double.parse(montoController.text),
+                  monto: _monto(montoController.text),
                   fecha: pago.fecha,
                 );
 
@@ -2813,6 +2869,8 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
         ],
       ),
     );
+    montoController.dispose();
+    rutController.dispose();
   }
 
   Future<void> _editarMovimiento(MovimientoSimple movimiento) async {
@@ -2822,7 +2880,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
     final rutController = TextEditingController(text: movimiento.rut ?? '');
 
     final montoController =
-        TextEditingController(text: movimiento.monto.toStringAsFixed(0));
+        TextEditingController(text: _numberFormat.format(movimiento.monto));
 
     await showDialog(
       context: context,
@@ -2859,7 +2917,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [PesoInputFormatter()],
             ),
           ],
         ),
@@ -2937,7 +2995,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                       ? numeroController.text
                       : null,
                   rut: _tieneRut(movimiento.tipo) ? rutController.text : null,
-                  monto: double.parse(montoController.text),
+                  monto: _monto(montoController.text),
                   fecha: movimiento.fecha,
                 );
 
@@ -2953,6 +3011,9 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
         ],
       ),
     );
+    montoController.dispose();
+    rutController.dispose();
+    numeroController.dispose();
   }
 
   String _getTituloMovimiento(String tipo) {
@@ -3123,12 +3184,12 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
                       const Divider(),
 
-                      // 2. MODO FERRETERÃA
+                      // 2. MODO FERRETERÍA
 
                       SwitchListTile(
-                        title: const Text('Modo FerreterÃ­a'),
+                        title: const Text('Modo Ferretería'),
                         subtitle:
-                            const Text('NumeraciÃ³n automÃ¡tica de facturas'),
+                            const Text('Numeración automática de facturas'),
                         value: _modoFerreteria,
                         onChanged: (value) {
                           setStateDialog(() {
@@ -3263,7 +3324,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
                       const Divider(),
 
-                      // 4. CONFIGURACIÃN DE IMPRESIÃN
+                      // 4. CONFIGURACIÓN DE IMPRESIÓN
 
                       const Text('Configuración de Impresión',
                           style: TextStyle(
@@ -3427,7 +3488,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
                       const SizedBox(height: 12),
 
-                      // DirecciÃ³n guardado servidor
+                      // Dirección guardado servidor
 
                       const Text('Guardado Servidor',
                           style: TextStyle(fontWeight: FontWeight.bold)),
@@ -3491,13 +3552,13 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
                       const Divider(),
 
-                      // 6. VERSIÃN DE LA APLICACIÃN
+                      // 6. VERSIÓN DE LA APLICACIÓN
 
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'VersiÃ³n de la aplicaciÃ³n',
+                            'Versión de la aplicación',
                             style: TextStyle(fontSize: 13, color: Colors.grey),
                           ),
                           Text(
@@ -3634,25 +3695,25 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
             final navigator = Navigator.of(context);
 
-            // Guardar el nombre del cajero para la prÃ³xima vez
+            // Guardar el nombre del cajero para la próxima vez
 
             await PreferencesService.saveNombreCajero(nombreCajero);
 
-            final apertura = double.tryParse(aperturaCajaController.text) ?? 0;
+            final apertura = _monto(aperturaCajaController.text);
 
-            final tarjetasPOS = double.tryParse(tarjetasController.text) ?? 0;
+            final tarjetasPOS = _monto(tarjetasController.text);
 
             final tarjetaPago =
-                double.tryParse(tarjetaPagoController.text) ?? 0;
+                _monto(tarjetaPagoController.text);
 
-            final efectivo = double.tryParse(efectivoController.text) ?? 0;
+            final efectivo = _monto(efectivoController.text);
 
             if (accion == 'print') {
               // Imprimir con diálogo (layoutPdf)
 
               try {
                 await logger.info('UI',
-                    '========== INICIO IMPRESIÃN CON DIÃLOGO ==========');
+                    '========== INICIO IMPRESIÓN CON DIÁLOGO ==========');
 
                 await logger.info('UI',
                     'Sesión: ${_cierreActual!.numeroSesion}, Cajero: $nombreCajero, Caja: $_nombreCaja');
@@ -3684,7 +3745,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
                 // Generar todos los documentos usando la función unificada
 
-                await logger.info('UI', 'Generando documentos tÃ©rmicos...');
+                await logger.info('UI', 'Generando documentos térmicos...');
 
                 final documentos =
                     await ThermalPrintService.generarTodosLosDocumentos(
@@ -3751,7 +3812,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 }
 
                 await logger.info('UI',
-                    '========== IMPRESIÃN COMPLETADA EXITOSAMENTE ==========');
+                    '========== IMPRESIÓN COMPLETADA EXITOSAMENTE ==========');
 
                 if (!mounted) return;
 
@@ -3764,7 +3825,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 );
               } catch (e, stackTrace) {
                 await logger.error(
-                    'UI', '========== ERROR EN IMPRESIÃN ==========',
+                    'UI', '========== ERROR EN IMPRESIÓN ==========',
                     error: e, stackTrace: stackTrace);
 
                 if (!mounted) return;
@@ -3781,7 +3842,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
               try {
                 await logger.info(
-                    'UI', '========== INICIO IMPRESIÃN DIRECTA ==========');
+                    'UI', '========== INICIO IMPRESIÓN DIRECTA ==========');
 
                 await logger.info('UI',
                     'Sesión: ${_cierreActual!.numeroSesion}, Cajero: $nombreCajero, Caja: $_nombreCaja');
@@ -3854,7 +3915,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
 
                 // Generar todos los documentos usando la función unificada
 
-                await logger.info('UI', 'Generando documentos tÃ©rmicos...');
+                await logger.info('UI', 'Generando documentos térmicos...');
 
                 final documentos =
                     await ThermalPrintService.generarTodosLosDocumentos(
@@ -3923,7 +3984,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                   }
 
                   await logger.info('UI',
-                      '========== IMPRESIÃN DIRECTA COMPLETADA ==========');
+                      '========== IMPRESIÓN DIRECTA COMPLETADA ==========');
                 } else {
                   await logger.warning('UI',
                       'No hay impresora disponible para impresión directa');
@@ -3943,7 +4004,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 );
               } catch (e, stackTrace) {
                 await logger.error(
-                    'UI', '========== ERROR EN IMPRESIÃN DIRECTA ==========',
+                    'UI', '========== ERROR EN IMPRESIÓN DIRECTA ==========',
                     error: e, stackTrace: stackTrace);
 
                 if (!mounted) return;
@@ -4052,7 +4113,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         final pathSegments = archivo.uri.pathSegments;
 
                         if (pathSegments.length >= 4) {
-                          // Tomar las Ãºltimas 3 carpetas antes del nombre del archivo (cajero/año/mes)
+                          // Tomar las últimas 3 carpetas antes del nombre del archivo (cajero/año/mes)
 
                           final subcarpetas = pathSegments.sublist(
                               pathSegments.length - 4, pathSegments.length - 1);
@@ -4179,23 +4240,12 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                 TextField(
                   controller: aperturaCajaController,
                   decoration: const InputDecoration(
-                    labelText: 'Apertura de caja',
-                    prefixText: '\$ ',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  textInputAction: TextInputAction.next,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-                TextField(
-                  controller: aperturaCajaController,
-                  decoration: const InputDecoration(
                     labelText: 'Apertura Caja',
                     prefixText: '\$ ',
                   ),
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [PesoInputFormatter()],
                   onChanged: (_) => setStateDialog(() => errorMessage = null),
                 ),
                 if (_modoFerreteria) ...[
@@ -4210,7 +4260,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                     ),
                     keyboardType: TextInputType.number,
                     textInputAction: TextInputAction.next,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    inputFormatters: [PesoInputFormatter()],
                     onChanged: (_) => setStateDialog(() => errorMessage = null),
                   ),
                 ],
@@ -4223,7 +4273,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                   ),
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [PesoInputFormatter()],
                   onChanged: (_) => setStateDialog(() => errorMessage = null),
                 ),
                 TextField(
@@ -4234,7 +4284,7 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                   ),
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: [PesoInputFormatter()],
                   onChanged: (_) => setStateDialog(() => errorMessage = null),
                 ),
               ],

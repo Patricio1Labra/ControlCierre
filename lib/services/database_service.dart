@@ -306,6 +306,15 @@ class DatabaseService {
       INSERT INTO google_drive_config (habilitado, subir_automaticamente)
       VALUES (0, 1)
     ''');
+
+    // Índices para acelerar queries por cierre_id
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_facturas_cierre ON facturas(cierre_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_boletas_cierre ON boletas_credito(cierre_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_pagos_cierre ON pagos(cierre_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_movimientos_cierre ON movimientos_simples(cierre_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_movimientos_tipo ON movimientos_simples(cierre_id, tipo)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_correcciones_cierre ON correcciones_cierre(cierre_id)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_tarjetas_cierre ON tarjetas(cierre_id)');
   }
 
   // CRUD para CierreCaja

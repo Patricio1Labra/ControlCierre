@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 class PreferencesService {
   static const String _keyModoFerreteria = 'modo_ferreteria';
   static const String _keyUltimoNumeroFactura = 'ultimo_numero_factura';
-  static const String _keyModoDonJose = 'modo_don_jose';
   static const String _keyRutaLocal = 'ruta_guardado_local';
   static const String _keyRutaServidor = 'ruta_guardado_servidor';
   static const String _keyNombreCaja = 'nombre_caja';
@@ -20,11 +19,6 @@ class PreferencesService {
   static Future<void> saveUltimoNumeroFactura(int value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_keyUltimoNumeroFactura, value);
-  }
-
-  static Future<void> saveModoDonJose(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_keyModoDonJose, value);
   }
 
   static Future<void> saveRutaLocal(String value) async {
@@ -51,11 +45,6 @@ class PreferencesService {
   static Future<int> getUltimoNumeroFactura() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_keyUltimoNumeroFactura) ?? 0;
-  }
-
-  static Future<bool> getModoDonJose() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_keyModoDonJose) ?? false;
   }
 
   static Future<String> getRutaLocal() async {

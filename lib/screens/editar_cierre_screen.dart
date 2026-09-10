@@ -12,6 +12,7 @@ import '../services/database_service.dart';
 import '../services/pdf_service.dart';
 import '../services/thermal_print_service.dart';
 import '../services/preferences_service.dart';
+import '../utils/peso_input_formatter.dart';
 import 'cierre_diario_screen.dart';
 
 class EditarCierreScreen extends StatefulWidget {
@@ -152,7 +153,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
               decoration: const InputDecoration(
                   labelText: 'Monto Contado', prefixText: '\$'),
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [PesoInputFormatter()],
             ),
             const SizedBox(height: 12),
             TextField(
@@ -160,7 +161,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
               decoration: const InputDecoration(
                   labelText: 'Monto Crédito', prefixText: '\$'),
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [PesoInputFormatter()],
             ),
           ],
         ),
@@ -250,7 +251,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
           decoration:
               const InputDecoration(labelText: 'Monto', prefixText: '\$'),
           keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          inputFormatters: [PesoInputFormatter()],
         ),
         actions: [
           TextButton(
@@ -319,7 +320,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
           decoration:
               const InputDecoration(labelText: 'Monto', prefixText: '\$'),
           keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          inputFormatters: [PesoInputFormatter()],
         ),
         actions: [
           TextButton(
@@ -390,7 +391,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
           decoration:
               const InputDecoration(labelText: 'Monto', prefixText: '\$'),
           keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          inputFormatters: [PesoInputFormatter()],
         ),
         actions: [
           TextButton(
@@ -497,7 +498,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                 decoration: const InputDecoration(
                     labelText: 'Monto Contado', prefixText: '\$'),
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                inputFormatters: [PesoInputFormatter()],
               ),
               const SizedBox(height: 16),
               TextField(
@@ -505,7 +506,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                 decoration: const InputDecoration(
                     labelText: 'Monto Crédito', prefixText: '\$'),
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                inputFormatters: [PesoInputFormatter()],
               ),
             ],
           ),
@@ -589,7 +590,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
               decoration:
                   const InputDecoration(labelText: 'Monto', prefixText: '\$'),
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [PesoInputFormatter()],
             ),
           ],
         ),
@@ -656,7 +657,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
               decoration:
                   const InputDecoration(labelText: 'Monto', prefixText: '\$'),
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [PesoInputFormatter()],
             ),
           ],
         ),
@@ -736,7 +737,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
               decoration:
                   const InputDecoration(labelText: 'Monto', prefixText: '\$'),
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [PesoInputFormatter()],
             ),
           ],
         ),
@@ -1250,7 +1251,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                                 border: OutlineInputBorder()),
                             keyboardType: TextInputType.number,
                             inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
+                              PesoInputFormatter()
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -1262,7 +1263,7 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
                                 border: OutlineInputBorder()),
                             keyboardType: TextInputType.number,
                             inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
+                              PesoInputFormatter()
                             ],
                           ),
                         ],
