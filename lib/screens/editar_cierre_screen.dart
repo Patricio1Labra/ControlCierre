@@ -477,155 +477,178 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
     final horaController =
         TextEditingController(text: esDeposito ? (mov.horaDeposito ?? '') : '');
 
+    bool donJoseEsBoleta = mov.numero?.startsWith('Boleta') == true;
+
     final resultado = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Builder(builder: (context) {
-          String? displayNumero;
-          if (mov.tipo == 'transferencia') {
-            displayNumero = mov.rut;
-          } else if (mov.tipo == 'don_jose') {
-            displayNumero = mov.numero;
-          } else if (mov.numero != null && mov.numero!.isNotEmpty) {
-            displayNumero = mov.numero;
-          }
-          return Text(
-              'Editar $tipoNombre${displayNumero != null && displayNumero.isNotEmpty ? "\n$displayNumero" : ""}');
-        }),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (esTransferencia)
-              TextField(
-                controller: numeroController,
-                decoration: const InputDecoration(
-                  labelText: 'Número de Boleta o Factura',
-                  isDense: true,
-                  border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          title: Builder(builder: (context) {
+            String? displayNumero;
+            if (mov.tipo == 'transferencia') {
+              displayNumero = mov.rut;
+            } else if (mov.tipo == 'don_jose') {
+              displayNumero = mov.numero;
+            } else if (mov.numero != null && mov.numero!.isNotEmpty) {
+              displayNumero = mov.numero;
+            }
+            return Text(
+                'Editar $tipoNombre${displayNumero != null && displayNumero.isNotEmpty ? "\n$displayNumero" : ""}');
+          }),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (esTransferencia)
+                TextField(
+                  controller: numeroController,
+                  decoration: const InputDecoration(
+                    labelText: 'Número de Boleta o Factura',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 ),
+              if (esTransferencia) const SizedBox(height: 12),
+              if (esCheque) ...[
+                TextField(
+                  controller: numeroController,
+                  decoration: const InputDecoration(
+                    labelText: 'Número de Cheque',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: rutController,
+                  decoration: const InputDecoration(
+                    labelText: 'RUT',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  inputFormatters: [RutInputFormatter()],
+                ),
+              ],
+              if (esCheque) const SizedBox(height: 12),
+              if (esDonJose) ...[
+                Row(
+                  children: [
+                    Text(donJoseEsBoleta ? 'Boleta' : 'Factura',
+                        style: const TextStyle(fontSize: 13)),
+                    const SizedBox(width: 8),
+                    Transform.scale(
+                      scale: 0.8,
+                      child: Switch(
+                        value: donJoseEsBoleta,
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            donJoseEsBoleta = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: numeroController,
+                  decoration: const InputDecoration(
+                    labelText: 'Número',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (esOtros)
+                TextField(
+                  controller: numeroController,
+                  decoration: const InputDecoration(
+                    labelText: 'Motivo',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.text,
+                ),
+              if (esOtros) const SizedBox(height: 12),
+              if (esDeposito)
+                TextField(
+                  controller: horaController,
+                  decoration: const InputDecoration(
+                    labelText: 'Hora (HH:mm)',
+                    isDense: true,
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.datetime,
+                  inputFormatters: [
+                    _HoraInputFormatter(),
+                    LengthLimitingTextInputFormatter(5),
+                  ],
+                ),
+              if (esDeposito) const SizedBox(height: 12),
+              TextField(
+                controller: montoController,
+                decoration:
+                    const InputDecoration(labelText: 'Monto', prefixText: '\$'),
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              ),
-            if (esTransferencia) const SizedBox(height: 12),
-            if (esCheque) ...[
-              TextField(
-                controller: numeroController,
-                decoration: const InputDecoration(
-                  labelText: 'Número de Cheque',
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: rutController,
-                decoration: const InputDecoration(
-                  labelText: 'RUT',
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                ),
-                inputFormatters: [RutInputFormatter()],
+                inputFormatters: [PesoInputFormatter()],
               ),
             ],
-            if (esCheque) const SizedBox(height: 12),
-            if (esDonJose)
-              TextField(
-                controller: numeroController,
-                decoration: const InputDecoration(
-                  labelText: 'Número de Boleta o Factura',
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              ),
-            if (esDonJose) const SizedBox(height: 12),
-            if (esOtros)
-              TextField(
-                controller: numeroController,
-                decoration: const InputDecoration(
-                  labelText: 'Motivo',
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.text,
-              ),
-            if (esOtros) const SizedBox(height: 12),
-            if (esDeposito)
-              TextField(
-                controller: horaController,
-                decoration: const InputDecoration(
-                  labelText: 'Hora (HH:mm)',
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.datetime,
-                inputFormatters: [
-                  _HoraInputFormatter(),
-                  LengthLimitingTextInputFormatter(5),
-                ],
-              ),
-            if (esDeposito) const SizedBox(height: 12),
-            TextField(
-              controller: montoController,
-              decoration:
-                  const InputDecoration(labelText: 'Monto', prefixText: '\$'),
-              keyboardType: TextInputType.number,
-              inputFormatters: [PesoInputFormatter()],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar')),
+            TextButton(
+              onPressed: () {
+                final texto = montoController.text
+                    .replaceAll('.', '')
+                    .replaceAll(',', '');
+                final nuevoMonto = double.tryParse(texto);
+                if (nuevoMonto != null) {
+                  String? numeroGuardado = null;
+                  if (esOtros || esDonJose) {
+                    if (numeroController.text.isNotEmpty) {
+                      if (esDonJose) {
+                        final tipoDoc = donJoseEsBoleta ? 'Boleta' : 'Factura';
+                        numeroGuardado = '$tipoDoc ${numeroController.text}';
+                      } else {
+                        numeroGuardado = numeroController.text;
+                      }
+                    }
+                  } else if (esCheque) {
+                    numeroGuardado = numeroController.text.isEmpty
+                        ? null
+                        : numeroController.text;
+                  } else {
+                    numeroGuardado = mov.numero;
+                  }
+
+                  Navigator.pop(context, {
+                    'monto': nuevoMonto,
+                    'rut': esTransferencia
+                        ? (numeroController.text.isEmpty
+                            ? null
+                            : numeroController.text)
+                        : (esCheque
+                            ? (rutController.text.isEmpty
+                                ? null
+                                : rutController.text)
+                            : mov.rut),
+                    'numero': numeroGuardado,
+                    'hora': esDeposito ? horaController.text : null,
+                  });
+                }
+              },
+              child: const Text('Guardar'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar')),
-          TextButton(
-            onPressed: () {
-              final texto =
-                  montoController.text.replaceAll('.', '').replaceAll(',', '');
-              final nuevoMonto = double.tryParse(texto);
-              if (nuevoMonto != null) {
-                String? numeroGuardado = null;
-                if (esOtros || esDonJose) {
-                  if (numeroController.text.isNotEmpty) {
-                    if (esDonJose) {
-                      final tipoDoc = mov.numero?.startsWith('Boleta') == true
-                          ? 'Boleta'
-                          : 'Factura';
-                      numeroGuardado = '$tipoDoc ${numeroController.text}';
-                    } else {
-                      numeroGuardado = numeroController.text;
-                    }
-                  }
-                } else if (esCheque) {
-                  numeroGuardado = numeroController.text.isEmpty
-                      ? null
-                      : numeroController.text;
-                } else {
-                  numeroGuardado = mov.numero;
-                }
-
-                Navigator.pop(context, {
-                  'monto': nuevoMonto,
-                  'rut': esTransferencia
-                      ? (numeroController.text.isEmpty
-                          ? null
-                          : numeroController.text)
-                      : (esCheque
-                          ? (rutController.text.isEmpty
-                              ? null
-                              : rutController.text)
-                          : mov.rut),
-                  'numero': numeroGuardado,
-                  'hora': esDeposito ? horaController.text : null,
-                });
-              }
-            },
-            child: const Text('Guardar'),
-          ),
-        ],
       ),
     );
 
@@ -1076,7 +1099,9 @@ class _EditarCierreScreenState extends State<EditarCierreScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cambios guardados exitosamente')),
         );
-        Navigator.pop(context, true);
+        _correcciones.clear();
+        setState(() => _hasChanges = false);
+        await _cargarDatos();
       }
     } catch (e) {
       if (mounted) {

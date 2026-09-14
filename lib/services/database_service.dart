@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/cierre_caja.dart';
 import '../models/factura.dart';
 import '../models/boleta_credito.dart';
@@ -24,12 +25,13 @@ class DatabaseService {
   }
 
   Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
+    final directory = await getApplicationDocumentsDirectory();
+    final path = join(directory.path, filePath);
+    await logger.info('Database', 'Ruta de base de datos: $path');
 
     return await openDatabase(
       path,
-      version: 12,
+      version: 14,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -167,8 +169,30 @@ class DatabaseService {
     }
     if (oldVersion < 12) {
       // Agregar columna hora_deposito para depósitos
-      await db.execute(
-          'ALTER TABLE movimientos_simples ADD COLUMN hora_deposito TEXT');
+      try {
+        await db.execute(
+            'ALTER TABLE movimientos_simples ADD COLUMN hora_deposito TEXT');
+      } catch (_) {
+        // Columna ya existe, ignorar
+      }
+    }
+    if (oldVersion < 13) {
+      // Fix: hora_deposito no se creó en versiones que saltaron directo a 12
+      try {
+        await db.execute(
+            'ALTER TABLE movimientos_simples ADD COLUMN hora_deposito TEXT');
+      } catch (_) {
+        // Columna ya existe, ignorar
+      }
+    }
+    if (oldVersion < 14) {
+      // Fix: usar_impresora_por_defecto no se creó en versiones que saltaron directo a 10
+      try {
+        await db.execute(
+            'ALTER TABLE configuracion_impresion ADD COLUMN usar_impresora_por_defecto INTEGER NOT NULL DEFAULT 1');
+      } catch (_) {
+        // Columna ya existe, ignorar
+      }
     }
   }
 
@@ -238,6 +262,7 @@ class DatabaseService {
         rut TEXT,
         monto REAL NOT NULL,
         fecha TEXT NOT NULL,
+        hora_deposito TEXT,
         FOREIGN KEY (cierre_id) REFERENCES cierres_caja (id) ON DELETE CASCADE
       )
     ''');
@@ -280,7 +305,8 @@ class DatabaseService {
         imprimir_resumen INTEGER NOT NULL DEFAULT 1,
         imprimir_ticket_entrega INTEGER NOT NULL DEFAULT 1,
         imprimir_don_jose INTEGER NOT NULL DEFAULT 1,
-        imprimir_facturas_mixtas INTEGER NOT NULL DEFAULT 1
+        imprimir_facturas_mixtas INTEGER NOT NULL DEFAULT 1,
+        usar_impresora_por_defecto INTEGER NOT NULL DEFAULT 1
       )
     ''');
 
@@ -292,8 +318,9 @@ class DatabaseService {
         imprimir_resumen,
         imprimir_ticket_entrega,
         imprimir_don_jose,
-        imprimir_facturas_mixtas
-      ) VALUES (1, 1, 1, 1, 1, 1)
+        imprimir_facturas_mixtas,
+        usar_impresora_por_defecto
+      ) VALUES (1, 1, 1, 1, 1, 1, 1)
     ''');
 
     // Tabla de configuración de Google Drive (OAuth2)
@@ -442,6 +469,30 @@ class DatabaseService {
       return result;
     } catch (e, stackTrace) {
       await logger.logDatabaseError('DELETE', 'cierres_caja', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<int> deleteOpenCierres({int? exceptId}) async {
+    try {
+      final db = await database;
+      String where = 'cerrada = 0';
+      List<dynamic> whereArgs = [];
+      if (exceptId != null) {
+        where += ' AND id != ?';
+        whereArgs.add(exceptId);
+      }
+      await logger.warning('Database',
+          'Eliminando cierres abiertos${exceptId != null ? " (excepto ID $exceptId)" : ""}');
+      final result = await db.delete(
+        'cierres_caja',
+        where: where,
+        whereArgs: whereArgs,
+      );
+      return result;
+    } catch (e, stackTrace) {
+      await logger.logDatabaseError(
+          'DELETE', 'cierres_caja (open)', e, stackTrace);
       rethrow;
     }
   }

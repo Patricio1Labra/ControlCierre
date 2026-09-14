@@ -39,8 +39,6 @@ class ThermalPrintService {
 
     // Calcular totales por componente sobre todas las facturas
 
-    final totalFacturasContado =
-        facturas.fold<double>(0, (sum, f) => sum + f.montoContado);
     final totalFacturasCredito =
         facturas.fold<double>(0, (sum, f) => sum + f.montoCredito);
     final totalBoletasCredito =
@@ -75,10 +73,8 @@ class ThermalPrintService {
         cierre.efectivo +
         totalOtrosEntrada;
 
-    // SALIDAS: pagos, total de facturas (todas: contado + credito), fondo caja (apertura), otros salida
-    final totalFacturas = totalFacturasContado + totalFacturasCredito;
-    final salidasTotales =
-        totalPagos + totalFacturas + cierre.aperturaCaja + totalOtrosSalida;
+    // SALIDAS: pagos, fondo caja (apertura), otros salida
+    final salidasTotales = totalPagos + cierre.aperturaCaja + totalOtrosSalida;
 
     final total = ingresosTotales - salidasTotales;
 
@@ -541,8 +537,6 @@ class ThermalPrintService {
 
     // Calcular totales por componente sobre todas las facturas
 
-    final totalFacturasContado =
-        facturas.fold<double>(0, (sum, f) => sum + f.montoContado);
     final totalFacturasCredito =
         facturas.fold<double>(0, (sum, f) => sum + f.montoCredito);
     final totalBoletasCredito =
@@ -577,10 +571,8 @@ class ThermalPrintService {
         cierre.efectivo +
         totalOtrosEntrada;
 
-    // SALIDAS: pagos, total de facturas (todas: contado + credito), fondo caja (apertura), otros salida
-    final totalFacturas = totalFacturasContado + totalFacturasCredito;
-    final salidasTotales =
-        totalPagos + totalFacturas + cierre.aperturaCaja + totalOtrosSalida;
+    // SALIDAS: pagos, fondo caja (apertura), otros salida
+    final salidasTotales = totalPagos + cierre.aperturaCaja + totalOtrosSalida;
 
     final total = ingresosTotales - salidasTotales;
 

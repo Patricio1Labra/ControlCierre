@@ -135,8 +135,6 @@ class PdfService {
     final facturasContado = facturas.where((f) => f.esContado).toList();
     final facturasCredito = facturas.where((f) => f.esCredito).toList();
 
-    final totalFacturasContado =
-        facturas.fold<double>(0, (sum, f) => sum + f.montoContado);
     final totalFacturasCredito =
         facturas.fold<double>(0, (sum, f) => sum + f.montoCredito);
     final totalBoletasCredito =
@@ -180,10 +178,8 @@ class PdfService {
         cierre.efectivo +
         totalOtrosEntrada;
 
-    // SALIDAS: pagos, total de facturas (todas: contado + credito), fondo caja (apertura), otros salida
-    final totalFacturas = totalFacturasContado + totalFacturasCredito;
-    final salidasTotales =
-        totalPagos + totalFacturas + cierre.aperturaCaja + totalOtrosSalida;
+    // SALIDAS: pagos, fondo caja (apertura), otros salida
+    final salidasTotales = totalPagos + cierre.aperturaCaja + totalOtrosSalida;
 
     final total = ingresosTotales - salidasTotales;
 
@@ -213,8 +209,8 @@ class PdfService {
               otrosEntrada,
             ),
             pw.SizedBox(height: 20),
-            _buildSeccionSalidas(totalPagos, totalFacturas, cierre.aperturaCaja,
-                totalOtrosSalida, otrosSalida),
+            _buildSeccionSalidas(
+                totalPagos, cierre.aperturaCaja, totalOtrosSalida, otrosSalida),
             if (correcciones.isNotEmpty) ...[
               pw.SizedBox(height: 20),
               _buildSeccionCorrecciones(correcciones),
@@ -409,7 +405,6 @@ class PdfService {
 
   static pw.Widget _buildSeccionSalidas(
     double pagos,
-    double totalFacturas,
     double fondoCaja,
     double otrosSalida,
     List<MovimientoSimple> otrosSalidaDetalle,

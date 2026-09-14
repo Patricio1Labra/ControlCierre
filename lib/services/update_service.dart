@@ -7,12 +7,14 @@ import 'package:archive/archive.dart';
 
 class UpdateService {
   static const String githubRepo = 'Patricio1Labra/ControlCierre';
-  static const String currentVersion = '1.0.7'; // Debe coincidir con pubspec.yaml
+  static const String currentVersion =
+      '1.0.9'; // Debe coincidir con pubspec.yaml
 
   /// Verifica si hay una nueva versión disponible en GitHub
   static Future<UpdateInfo?> checkForUpdates() async {
     try {
-      final url = Uri.parse('https://api.github.com/repos/$githubRepo/releases/latest');
+      final url =
+          Uri.parse('https://api.github.com/repos/$githubRepo/releases/latest');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -20,7 +22,8 @@ class UpdateService {
         final latestVersion = data['tag_name'] as String;
         final downloadUrl = _findWindowsZipUrl(data['assets'] as List);
 
-        if (downloadUrl != null && _isNewerVersion(latestVersion, currentVersion)) {
+        if (downloadUrl != null &&
+            _isNewerVersion(latestVersion, currentVersion)) {
           return UpdateInfo(
             version: latestVersion,
             downloadUrl: downloadUrl,
@@ -40,7 +43,8 @@ class UpdateService {
   static String? _findWindowsZipUrl(List assets) {
     for (var asset in assets) {
       final name = asset['name'] as String;
-      if (name.toLowerCase().endsWith('.zip') && name.toLowerCase().contains('windows')) {
+      if (name.toLowerCase().endsWith('.zip') &&
+          name.toLowerCase().contains('windows')) {
         return asset['browser_download_url'] as String;
       }
     }
@@ -63,7 +67,8 @@ class UpdateService {
   }
 
   /// Descarga el archivo ZIP de actualización
-  static Future<File?> downloadUpdate(String downloadUrl, Function(double)? onProgress) async {
+  static Future<File?> downloadUpdate(
+      String downloadUrl, Function(double)? onProgress) async {
     try {
       final response = await http.get(Uri.parse(downloadUrl));
 
@@ -115,7 +120,8 @@ class UpdateService {
           await outputFile.create(recursive: true);
           await outputFile.writeAsBytes(data);
         } else {
-          await Directory('${extractDir.path}/$filename').create(recursive: true);
+          await Directory('${extractDir.path}/$filename')
+              .create(recursive: true);
         }
       }
 

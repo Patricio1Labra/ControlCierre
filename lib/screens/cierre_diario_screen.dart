@@ -336,22 +336,6 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
     _cargarPreferencias();
 
     _cargarCierreActual();
-
-    _checkForUpdates();
-  }
-
-  /// Verifica si hay actualizaciones disponibles
-
-  Future<void> _checkForUpdates() async {
-    // Esperar un poco para que la UI se cargue primero
-
-    await Future.delayed(const Duration(seconds: 2));
-
-    final updateInfo = await UpdateService.checkForUpdates();
-
-    if (updateInfo != null && mounted) {
-      await showUpdateDialog(context, updateInfo);
-    }
   }
 
   Future<void> _cargarPreferencias() async {
@@ -3326,95 +3310,94 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                         contentPadding: EdgeInsets.zero,
                       ),
 
-                      // 3. PANELES VISIBLES (solo si no está en modo ferretería)
+                      // 3. PANELES VISIBLES
 
-                      if (!_modoFerreteria) ...[
-                        const Divider(),
-                        const Text('Paneles Visibles',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16)),
-                        const SizedBox(height: 12),
-                        CheckboxListTile(
-                          title: const Text('Factura'),
-                          value: _panelesVisibles['factura'],
-                          onChanged: (value) {
-                            setStateDialog(() {
-                              _panelesVisibles['factura'] = value ?? true;
-                            });
-                          },
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        CheckboxListTile(
-                          title: const Text('Boleta Crédito'),
-                          value: _panelesVisibles['boleta_credito'],
-                          onChanged: (value) {
-                            setStateDialog(() {
-                              _panelesVisibles['boleta_credito'] =
-                                  value ?? true;
-                            });
-                          },
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        CheckboxListTile(
-                          title: const Text('Pago'),
-                          value: _panelesVisibles['pago'],
-                          onChanged: (value) {
-                            setStateDialog(() {
-                              _panelesVisibles['pago'] = value ?? true;
-                            });
-                          },
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        CheckboxListTile(
-                          title: const Text('Transferencia'),
-                          value: _panelesVisibles['transferencia'],
-                          onChanged: (value) {
-                            setStateDialog(() {
-                              _panelesVisibles['transferencia'] = value ?? true;
-                            });
-                          },
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        CheckboxListTile(
-                          title: const Text('Cheque'),
-                          value: _panelesVisibles['cheque'],
-                          onChanged: (value) {
-                            setStateDialog(() {
-                              _panelesVisibles['cheque'] = value ?? true;
-                            });
-                          },
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        CheckboxListTile(
-                          title: const Text('Depósito'),
-                          value: _panelesVisibles['deposito'],
-                          onChanged: (value) {
-                            setStateDialog(() {
-                              _panelesVisibles['deposito'] = value ?? true;
-                            });
-                          },
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        CheckboxListTile(
-                          title: const Text('Nota Crédito'),
-                          value: _panelesVisibles['nota_credito'],
-                          onChanged: (value) {
-                            setStateDialog(() {
-                              _panelesVisibles['nota_credito'] = value ?? true;
-                            });
-                          },
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        CheckboxListTile(
-                          title: const Text('Otros'),
-                          value: _panelesVisibles['otros'],
-                          onChanged: (value) {
-                            setStateDialog(() {
-                              _panelesVisibles['otros'] = value ?? true;
-                            });
-                          },
-                          contentPadding: EdgeInsets.zero,
-                        ),
+                      const Divider(),
+                      const Text('Paneles Visibles',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 12),
+                      CheckboxListTile(
+                        title: const Text('Factura'),
+                        value: _panelesVisibles['factura'],
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            _panelesVisibles['factura'] = value ?? true;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      CheckboxListTile(
+                        title: const Text('Boleta Crédito'),
+                        value: _panelesVisibles['boleta_credito'],
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            _panelesVisibles['boleta_credito'] = value ?? true;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      CheckboxListTile(
+                        title: const Text('Pago'),
+                        value: _panelesVisibles['pago'],
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            _panelesVisibles['pago'] = value ?? true;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      CheckboxListTile(
+                        title: const Text('Transferencia'),
+                        value: _panelesVisibles['transferencia'],
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            _panelesVisibles['transferencia'] = value ?? true;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      CheckboxListTile(
+                        title: const Text('Cheque'),
+                        value: _panelesVisibles['cheque'],
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            _panelesVisibles['cheque'] = value ?? true;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      CheckboxListTile(
+                        title: const Text('Depósito'),
+                        value: _panelesVisibles['deposito'],
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            _panelesVisibles['deposito'] = value ?? true;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      CheckboxListTile(
+                        title: const Text('Nota Crédito'),
+                        value: _panelesVisibles['nota_credito'],
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            _panelesVisibles['nota_credito'] = value ?? true;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      CheckboxListTile(
+                        title: const Text('Otros'),
+                        value: _panelesVisibles['otros'],
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            _panelesVisibles['otros'] = value ?? true;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      if (!_modoFerreteria)
                         CheckboxListTile(
                           title: const Text('Don José'),
                           value: _panelesVisibles['don_jose'],
@@ -3425,7 +3408,6 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                           },
                           contentPadding: EdgeInsets.zero,
                         ),
-                      ],
 
                       const Divider(),
 
@@ -3715,6 +3697,20 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
                             ),
                           ),
                         ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          await showManualUpdateDialog(context);
+                        },
+                        icon: const Icon(Icons.system_update),
+                        label: const Text('Buscar actualizaciones'),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 40),
+                        ),
                       ),
                     ],
                   ),
@@ -4191,6 +4187,9 @@ class _CierreDiarioScreenState extends State<CierreDiarioScreen> {
               );
 
               await _db.updateCierre(cierreActualizado);
+
+              // Eliminar sesiones abiertas anteriores que quedaron a la deriva
+              await _db.deleteOpenCierres(exceptId: cierreActualizado.id);
 
               setState(() {
                 _cierreActual = cierreActualizado;
